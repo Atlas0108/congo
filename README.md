@@ -1,4 +1,4 @@
-# Congo - Amazon Clone
+# Congo
 
 A full-stack e-commerce application built with Python (Flask), HTML/Tailwind CSS, and PostgreSQL.
 

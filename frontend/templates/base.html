@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Congo - Your Online Store{% endblock %}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-gray-900 text-white">
+        <div class="container mx-auto px-4 py-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-8">
+                    <a href="/" class="text-2xl font-bold text-yellow-400">Congo</a>
+                    <div class="hidden md:flex space-x-4">
+                        <a href="/" class="hover:text-yellow-400">Home</a>
+                        <a href="/products" class="hover:text-yellow-400">Products</a>
+                        <a href="/categories" class="hover:text-yellow-400">Categories</a>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="/cart" class="hover:text-yellow-400 flex items-center">
+                        <svg class="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                        </svg>
+                        <span id="cart-count">0</span>
+                    </a>
+                    <div id="auth-buttons">
+                        <a href="/login" class="hover:text-yellow-400">Sign In</a>
+                        <a href="/register" class="bg-yellow-400 text-gray-900 px-4 py-2 rounded hover:bg-yellow-500">Sign Up</a>
+                    </div>
+                    <div id="user-menu" class="hidden">
+                        <span id="username" class="mr-4"></span>
+                        <button onclick="logout()" class="hover:text-yellow-400">Logout</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-4 py-8">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-900 text-white mt-16">
+        <div class="container mx-auto px-4 py-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Get to Know Us</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-yellow-400">About Us</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Careers</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Press Releases</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Make Money with Us</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-yellow-400">Sell products</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Become an Affiliate</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Let Us Help You</h3>
+                    <ul class="space-y-2 text-sm">
+                        <li><a href="#" class="hover:text-yellow-400">Your Account</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Returns</a></li>
+                        <li><a href="#" class="hover:text-yellow-400">Help</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h3 class="text-lg font-bold mb-4">Connect with Us</h3>
+                    <div class="flex space-x-4">
+                        <a href="#" class="hover:text-yellow-400">Facebook</a>
+                        <a href="#" class="hover:text-yellow-400">Twitter</a>
+                        <a href="#" class="hover:text-yellow-400">Instagram</a>
+                    </div>
+                </div>
+            </div>
+            <div class="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
+                <p>&copy; 2024 Congo. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
+

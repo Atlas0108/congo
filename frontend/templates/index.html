@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}Congo - Home{% endblock %}
+
+{% block content %}
+<!-- Hero Section -->
+<div class="bg-gradient-to-r from-yellow-400 to-orange-500 text-white py-16 mb-12 rounded-lg">
+    <div class="text-center">
+        <h1 class="text-5xl font-bold mb-4">Welcome to Congo</h1>
+        <p class="text-xl mb-8">Your one-stop shop for everything you need</p>
+        <a href="/products" class="bg-white text-orange-500 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
+            Shop Now
+        </a>
+    </div>
+</div>
+
+<!-- Featured Products -->
+<div class="mb-12">
+    <h2 class="text-3xl font-bold mb-6">Featured Products</h2>
+    <div id="featured-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <!-- Products will be loaded here -->
+    </div>
+</div>
+
+<!-- Categories -->
+<div class="mb-12">
+    <h2 class="text-3xl font-bold mb-6">Shop by Category</h2>
+    <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <!-- Categories will be loaded here -->
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Load featured products
+    fetch('/api/products/?per_page=8')
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('featured-products');
+            container.innerHTML = data.products.map(product => `
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                    <img src="${product.image_url || 'https://via.placeholder.com/300'}" alt="${product.name}" class="w-full h-48 object-cover">
+                    <div class="p-4">
+                        <h3 class="font-semibold text-lg mb-2">${product.name}</h3>
+                        <p class="text-gray-600 text-sm mb-2 line-clamp-2">${product.description || ''}</p>
+                        <div class="flex items-center justify-between">
+                            <span class="text-2xl font-bold text-orange-500">$${product.price.toFixed(2)}</span>
+                            <button onclick="addToCart(${product.id})" class="bg-yellow-400 text-gray-900 px-4 py-2 rounded hover:bg-yellow-500">
+                                Add to Cart
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        });
+
+    // Load categories
+    fetch('/api/products/categories')
+        .then(response => response.json())
+        .then(categories => {
+            const container = document.getElementById('categories');
+            container.innerHTML = categories.map(category => `
+                <a href="/products?category=${encodeURIComponent(category)}" class="bg-white rounded-lg shadow-md p-6 text-center hover:shadow-lg transition">
+                    <h3 class="font-semibold text-lg">${category}</h3>
+                </a>
+            `).join('');
+        });
+</script>
+{% endblock %}
+

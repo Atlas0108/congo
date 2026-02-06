@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+
+{% block title %}Shopping Cart - Congo{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold mb-6">Shopping Cart</h1>
+<div id="cart-container">
+    <div class="bg-white rounded-lg shadow-md p-6">
+        <p class="text-center text-gray-500">Loading cart...</p>
+    </div>
+</div>
+
+<div id="checkout-section" class="hidden mt-8 bg-white rounded-lg shadow-md p-6">
+    <h2 class="text-2xl font-bold mb-4">Checkout</h2>
+    <form id="checkout-form" class="space-y-4">
+        <div>
+            <label for="shipping_address" class="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
+            <textarea id="shipping_address" name="shipping_address" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"></textarea>
+        </div>
+        <div class="flex items-center justify-between">
+            <span class="text-xl font-semibold">Total: $<span id="cart-total">0.00</span></span>
+            <button type="submit" class="bg-yellow-400 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition">
+                Place Order
+            </button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function loadCart() {
+        fetch('/api/cart/')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Not authenticated');
+            })
+            .then(cart => {
+                const container = document.getElementById('cart-container');
+                const checkoutSection = document.getElementById('checkout-section');
+                
+                if (cart.length === 0) {
+                    container.innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Your cart is empty.</p></div>';
+                    checkoutSection.classList.add('hidden');
+                } else {
+                    let total = 0;
+                    container.innerHTML = cart.map(item => {
+                        const itemTotal = item.product.price * item.quantity;
+                        total += itemTotal;
+                        return `
+                            <div class="bg-white rounded-lg shadow-md p-6 mb-4 flex items-center justify-between">
+                                <div class="flex items-center space-x-4">
+                                    <img src="${item.product.image_url || 'https://via.placeholder.com/100'}" alt="${item.product.name}" class="w-24 h-24 object-cover rounded">
+                                    <div>
+                                        <h3 class="font-semibold text-lg">${item.product.name}</h3>
+                                        <p class="text-gray-600">$${item.product.price.toFixed(2)}</p>
+                                    </div>
+                                </div>
+                                <div class="flex items-center space-x-4">
+                                    <div class="flex items-center space-x-2">
+                                        <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" class="px-3 py-1 border rounded">-</button>
+                                        <span>${item.quantity}</span>
+                                        <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" class="px-3 py-1 border rounded">+</button>
+                                    </div>
+                                    <span class="text-xl font-semibold">$${itemTotal.toFixed(2)}</span>
+                                    <button onclick="removeFromCart(${item.id})" class="text-red-600 hover:text-red-700">Remove</button>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    document.getElementById('cart-total').textContent = total.toFixed(2);
+                    checkoutSection.classList.remove('hidden');
+                }
+            })
+            .catch(() => {
+                document.getElementById('cart-container').innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Please <a href="/login" class="text-yellow-600">login</a> to view your cart.</p></div>';
+            });
+    }
+    
+    function updateQuantity(itemId, newQuantity) {
+        if (newQuantity <= 0) {
+            removeFromCart(itemId);
+            return;
+        }
+        fetch(`/api/cart/${itemId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ quantity: newQuantity })
+        })
+        .then(() => loadCart());
+    }
+    
+    function removeFromCart(itemId) {
+        fetch(`/api/cart/${itemId}`, {
+            method: 'DELETE'
+        })
+        .then(() => {
+            loadCart();
+            updateCartCount();
+        });
+    }
+    
+    document.getElementById('checkout-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const response = await fetch('/api/orders/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                shipping_address: formData.get('shipping_address')
+            })
+        });
+        
+        const result = await response.json();
+        if (response.ok) {
+            alert('Order placed successfully!');
+            window.location.href = '/orders';
+        } else {
+            alert(result.error || 'Failed to place order');
+        }
+    });
+    
+    loadCart();
+</script>
+{% endblock %}
+

@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}Products - Congo{% endblock %}
+
+{% block content %}
+<div class="mb-6">
+    <h1 class="text-3xl font-bold mb-4">Products</h1>
+    
+    <!-- Search and Filter -->
+    <div class="flex flex-col md:flex-row gap-4 mb-6">
+        <input type="text" id="search-input" placeholder="Search products..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+            <option value="">All Categories</option>
+        </select>
+    </div>
+</div>
+
+<!-- Products Grid -->
+<div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Products will be loaded here -->
+</div>
+
+<!-- Pagination -->
+<div id="pagination" class="flex justify-center space-x-2">
+    <!-- Pagination will be loaded here -->
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentPage = 1;
+    let currentCategory = '';
+    let currentSearch = '';
+
+    function loadProducts(page = 1, category = '', search = '') {
+        let url = `/api/products/?page=${page}&per_page=12`;
+        if (category) url += `&category=${encodeURIComponent(category)}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                const container = document.getElementById('products-container');
+                if (data.products.length === 0) {
+                    container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">No products found.</p>';
+                } else {
+                    container.innerHTML = data.products.map(product => `
+                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                            <a href="/product/${product.id}">
+                                <img src="${product.image_url || 'https://via.placeholder.com/300'}" alt="${product.name}" class="w-full h-48 object-cover">
+                            </a>
+                            <div class="p-4">
+                                <a href="/product/${product.id}">
+                                    <h3 class="font-semibold text-lg mb-2 hover:text-yellow-500">${product.name}</h3>
+                                </a>
+                                <p class="text-gray-600 text-sm mb-2 line-clamp-2">${product.description || ''}</p>
+                                <div class="flex items-center justify-between">
+                                    <span class="text-2xl font-bold text-orange-500">$${product.price.toFixed(2)}</span>
+                                    <button onclick="addToCart(${product.id})" class="bg-yellow-400 text-gray-900 px-4 py-2 rounded hover:bg-yellow-500">
+                                        Add to Cart
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `).join('');
+                }
+
+                // Pagination
+                const pagination = document.getElementById('pagination');
+                if (data.pages > 1) {
+                    let paginationHTML = '';
+                    if (data.page > 1) {
+                        paginationHTML += `<button onclick="loadProducts(${data.page - 1}, '${category}', '${search}')" class="px-4 py-2 border rounded hover:bg-gray-100">Previous</button>`;
+                    }
+                    for (let i = 1; i <= data.pages; i++) {
+                        if (i === data.page) {
+                            paginationHTML += `<button class="px-4 py-2 bg-yellow-400 text-gray-900 rounded font-semibold">${i}</button>`;
+                        } else {
+                            paginationHTML += `<button onclick="loadProducts(${i}, '${category}', '${search}')" class="px-4 py-2 border rounded hover:bg-gray-100">${i}</button>`;
+                        }
+                    }
+                    if (data.page < data.pages) {
+                        paginationHTML += `<button onclick="loadProducts(${data.page + 1}, '${category}', '${search}')" class="px-4 py-2 border rounded hover:bg-gray-100">Next</button>`;
+                    }
+                    pagination.innerHTML = paginationHTML;
+                } else {
+                    pagination.innerHTML = '';
+                }
+            });
+    }
+
+    // Load categories
+    fetch('/api/products/categories')
+        .then(response => response.json())
+        .then(categories => {
+            const select = document.getElementById('category-filter');
+            categories.forEach(category => {
+                const option = document.createElement('option');
+                option.value = category;
+                option.textContent = category;
+                select.appendChild(option);
+            });
+        });
+
+    // Event listeners
+    document.getElementById('category-filter').addEventListener('change', (e) => {
+        currentCategory = e.target.value;
+        currentPage = 1;
+        loadProducts(currentPage, currentCategory, currentSearch);
+    });
+
+    document.getElementById('search-input').addEventListener('input', (e) => {
+        currentSearch = e.target.value;
+        currentPage = 1;
+        loadProducts(currentPage, currentCategory, currentSearch);
+    });
+
+    // Load products on page load
+    loadProducts();
+</script>
+{% endblock %}
+

@@ -15,6 +15,12 @@
             <div class="flex items-center justify-between gap-4">
                 <!-- Search Bar and Delivery Location -->
                 <div class="flex-1 flex items-center gap-4 hidden md:flex">
+                    <!-- Home Icon -->
+                    <a href="/" class="text-white hover:opacity-80 flex-shrink-0">
+                        <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z"></path>
+                        </svg>
+                    </a>
                     <!-- Search Bar -->
                     <div class="flex-1 max-w-2xl">
                         <form id="header-search-form" onsubmit="handleHeaderSearch(event)" class="flex items-stretch">
@@ -235,6 +241,29 @@
                     </a>
                     <button type="button" onclick="confirmAddressSelection()" class="btn-primary btn-primary-full btn-primary-lg mt-4">
                         Deliver to this address
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Payment Method Selector Modal (Global) -->
+    <div id="payment-method-selector-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+        <div class="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div class="p-6">
+                <h2 class="text-2xl font-bold mb-2">Select a payment method</h2>
+                <p id="payment-method-count" class="text-sm text-gray-600 mb-4">Payment methods</p>
+                
+                <div id="payment-method-list" class="space-y-4 mb-4">
+                    <!-- Payment methods will be loaded here -->
+                </div>
+                
+                <div class="border-t border-gray-200 pt-4 space-y-2">
+                    <a href="/account/payment-methods" class="block text-blue-600 hover:underline text-sm">
+                        Add a new payment method
+                    </a>
+                    <button type="button" onclick="confirmPaymentMethodSelection()" class="btn-primary btn-primary-full btn-primary-lg mt-4">
+                        Use this payment method
                     </button>
                 </div>
             </div>

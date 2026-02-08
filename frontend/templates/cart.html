@@ -30,6 +30,17 @@
             <input type="hidden" id="shipping_address" name="shipping_address" required>
             <input type="hidden" id="selected_address_id" name="selected_address_id">
         </div>
+        <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Payment Method</label>
+            <div id="selected-payment-display" class="mb-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div id="payment-details" class="text-sm text-gray-700 mb-2">No payment method selected</div>
+                <button type="button" onclick="openPaymentMethodSelector()" class="text-blue-600 hover:underline text-sm">
+                    Change payment method
+                </button>
+            </div>
+            
+            <input type="hidden" id="selected_payment_method_id" name="selected_payment_method_id">
+        </div>
         <div class="flex items-center justify-between">
             <span class="text-xl font-semibold">Total: $<span id="cart-total">0.00</span></span>
             <button type="submit" class="btn-success btn-primary-lg">
@@ -68,7 +79,7 @@
                         const stockColor = inStock ? 'text-green-600' : 'text-red-600';
                         
                         return `
-                            <div class="bg-white border-b border-gray-200 py-4">
+                            <div class="bg-white border-b border-gray-200 py-4 px-4">
                                 <div class="flex gap-4">
                                     <!-- Product Image -->
                                     <div class="flex-shrink-0">
@@ -115,9 +126,15 @@
                                             <div class="flex items-center border border-gray-300 rounded">
                                                 <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" 
                                                         class="px-3 py-1 hover:bg-gray-100 flex items-center justify-center">
-                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                                    </svg>
+                                                    ${item.quantity > 1 ? `
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"></path>
+                                                        </svg>
+                                                    ` : `
+                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                        </svg>
+                                                    `}
                                                 </button>
                                                 <span class="px-4 py-1 border-x border-gray-300 text-center min-w-[3rem]">${item.quantity}</span>
                                                 <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" 
@@ -135,9 +152,6 @@
                                                 </button>
                                                 <button onclick="saveForLater(${item.id})" class="text-blue-600 hover:underline">
                                                     Save for later
-                                                </button>
-                                                <button onclick="compareItem(${item.id})" class="text-blue-600 hover:underline">
-                                                    Compare with similar items
                                                 </button>
                                                 <button onclick="shareItem(${item.id})" class="text-blue-600 hover:underline">
                                                     Share
@@ -169,8 +183,9 @@
                                 if (guestMessage) guestMessage.classList.remove('hidden');
                             } else {
                                 if (guestMessage) guestMessage.classList.add('hidden');
-                                // Load default address
-                                loadDefaultAddress();
+                    // Load default address and payment method
+                    loadDefaultAddress();
+                    loadDefaultPaymentMethod();
                             }
                         })
                         .catch(() => {
@@ -283,6 +298,144 @@
             });
     }
     
+    // Payment method functions
+    window.selectedPaymentMethodId = null;
+    window.savedPaymentMethods = [];
+    
+    function loadDefaultPaymentMethod() {
+        fetch('/api/users/payment-methods')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                return [];
+            })
+            .then(paymentMethods => {
+                window.savedPaymentMethods = paymentMethods;
+                
+                if (paymentMethods.length === 0) {
+                    const paymentDetails = document.getElementById('payment-details');
+                    if (paymentDetails) {
+                        paymentDetails.textContent = 'No payment methods saved. Add a payment method to continue.';
+                    }
+                } else {
+                    // Find and select default payment method
+                    const defaultPayment = paymentMethods.find(pm => pm.is_default) || paymentMethods[0];
+                    if (defaultPayment) {
+                        window.selectedPaymentMethodId = defaultPayment.id;
+                        displayPaymentMethod(defaultPayment);
+                    }
+                }
+            })
+            .catch(() => {
+                // Silently fail if payment methods can't be loaded
+            });
+    }
+    
+    function displayPaymentMethod(paymentMethod) {
+        const paymentDetails = document.getElementById('payment-details');
+        const cardTypeLabel = paymentMethod.card_type.includes('Credit') || paymentMethod.card_type.includes('Debit') ? paymentMethod.card_type : paymentMethod.card_type + ' Credit card';
+        
+        paymentDetails.innerHTML = `
+            <div class="font-semibold mb-1">${paymentMethod.card_type}</div>
+            <div>${cardTypeLabel} ending in .... ${paymentMethod.last_four}</div>
+            <div>${paymentMethod.cardholder_name}</div>
+        `;
+        
+        document.getElementById('selected_payment_method_id').value = paymentMethod.id;
+    }
+    
+    function openPaymentMethodSelector() {
+        const modal = document.getElementById('payment-method-selector-modal');
+        if (modal) {
+            modal.classList.remove('hidden');
+            loadPaymentMethodSelector();
+        }
+    }
+    
+    function closePaymentMethodSelector() {
+        const modal = document.getElementById('payment-method-selector-modal');
+        if (modal) {
+            modal.classList.add('hidden');
+        }
+    }
+    
+    function loadPaymentMethodSelector() {
+        fetch('/api/users/payment-methods')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                return [];
+            })
+            .then(paymentMethods => {
+                window.savedPaymentMethods = paymentMethods;
+                const listContainer = document.getElementById('payment-method-list');
+                const countElement = document.getElementById('payment-method-count');
+                
+                if (countElement) {
+                    countElement.textContent = `${paymentMethods.length} payment method${paymentMethods.length !== 1 ? 's' : ''}`;
+                }
+                
+                if (paymentMethods.length === 0) {
+                    listContainer.innerHTML = '<p class="text-gray-500 text-sm">No payment methods saved.</p>';
+                    return;
+                }
+                
+                listContainer.innerHTML = paymentMethods.map(pm => {
+                    const isSelected = window.selectedPaymentMethodId === pm.id;
+                    const cardTypeLabel = pm.card_type.includes('Credit') || pm.card_type.includes('Debit') ? pm.card_type : pm.card_type + ' Credit card';
+                    const defaultBadge = pm.is_default ? '<span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded ml-2">Default</span>' : '';
+                    const expiredBadge = pm.is_expired ? '<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded ml-2">Expired</span>' : '';
+                    
+                    return `
+                        <label class="flex items-start p-4 border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 ${isSelected ? 'border-blue-500 bg-blue-50' : ''}">
+                            <input type="radio" name="payment_method_radio" value="${pm.id}" 
+                                   onchange="updatePaymentMethodSelection(${pm.id})" 
+                                   ${isSelected ? 'checked' : ''}
+                                   class="mt-1 mr-3">
+                            <div class="flex-1">
+                                <div class="font-medium text-sm">
+                                    ${pm.card_type}${defaultBadge}${expiredBadge}
+                                </div>
+                                <div class="text-xs text-gray-600 mt-1">
+                                    ${cardTypeLabel} ending in .... ${pm.last_four}
+                                </div>
+                                <div class="text-xs text-gray-600">${pm.cardholder_name}</div>
+                            </div>
+                        </label>
+                    `;
+                }).join('');
+            })
+            .catch(() => {
+                const listContainer = document.getElementById('payment-method-list');
+                listContainer.innerHTML = '<p class="text-red-500 text-sm">Error loading payment methods.</p>';
+            });
+    }
+    
+    function updatePaymentMethodSelection(paymentMethodId) {
+        window.selectedPaymentMethodId = paymentMethodId;
+        loadPaymentMethodSelector(); // Reload to update visual state
+    }
+    
+    function confirmPaymentMethodSelection() {
+        if (!window.selectedPaymentMethodId) {
+            alert('Please select a payment method');
+            return;
+        }
+        
+        const selectedPayment = window.savedPaymentMethods.find(pm => pm.id === window.selectedPaymentMethodId);
+        if (selectedPayment) {
+            displayPaymentMethod(selectedPayment);
+            closePaymentMethodSelector();
+        }
+    }
+    
+    window.openPaymentMethodSelector = openPaymentMethodSelector;
+    window.closePaymentMethodSelector = closePaymentMethodSelector;
+    window.updatePaymentMethodSelection = updatePaymentMethodSelection;
+    window.confirmPaymentMethodSelection = confirmPaymentMethodSelection;
+    
     function displayAddress(address) {
         const addressDetails = document.getElementById('address-details');
         
@@ -329,7 +482,8 @@
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                shipping_address: formData.get('shipping_address')
+                shipping_address: formData.get('shipping_address'),
+                payment_method_id: formData.get('selected_payment_method_id')
             })
         });
         
@@ -343,6 +497,16 @@
     });
     
     loadCart();
+    
+    // Close payment method modal when clicking outside
+    const paymentModal = document.getElementById('payment-method-selector-modal');
+    if (paymentModal) {
+        paymentModal.addEventListener('click', (e) => {
+            if (e.target.id === 'payment-method-selector-modal') {
+                closePaymentMethodSelector();
+            }
+        });
+    }
 </script>
 {% endblock %}
 

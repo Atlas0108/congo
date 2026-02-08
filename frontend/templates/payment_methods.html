@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Methods - Congo{% endblock %}
+
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <div class="mb-4 text-sm">
+        <a href="/account" class="text-blue-600 hover:underline">Your Account</a>
+        <span class="text-gray-500 mx-1">></span>
+        <span class="text-gray-700">Payment Methods</span>
+    </div>
+    
+    <h1 class="text-2xl font-semibold mb-6">Payment Methods</h1>
+    
+    <div class="flex gap-6">
+        <!-- Left Column: Cards & accounts list -->
+        <div class="w-80 flex-shrink-0">
+            <h2 class="text-lg font-semibold mb-4">Cards & accounts</h2>
+            <div id="payment-methods-list" class="space-y-2">
+                <!-- Payment methods will be loaded here -->
+            </div>
+            
+            <!-- Add payment method button -->
+            <button onclick="openAddPaymentMethod()" class="mt-4 w-full border-2 border-dashed border-gray-300 rounded-lg p-4 text-center hover:border-gray-400 transition flex items-center justify-center gap-2">
+                <svg class="w-5 h-5 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                <span class="text-gray-700 font-medium">Add a payment method</span>
+            </button>
+        </div>
+        
+        <!-- Right Column: Selected card details -->
+        <div class="flex-1">
+            <div id="payment-method-details" class="bg-white border border-gray-200 rounded-lg p-6">
+                <p class="text-gray-500 text-center py-12">Select a payment method to view details</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Payment Method Modal -->
+<div id="add-payment-modal" class="hidden fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+    <div class="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+        <h3 class="text-xl font-semibold mb-4">Add a payment method</h3>
+        <form id="add-payment-form" class="space-y-4">
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Card Type</label>
+                <select name="card_type" required class="w-full px-3 py-2 border border-gray-300 rounded-lg">
+                    <option value="">Select card type</option>
+                    <option value="Visa">Visa</option>
+                    <option value="Mastercard">Mastercard</option>
+                    <option value="American Express">American Express</option>
+                    <option value="Discover">Discover</option>
+                </select>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Last 4 digits</label>
+                <input type="text" name="last_four" maxlength="4" pattern="[0-9]{4}" required class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="1234">
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-700 mb-1">Cardholder Name</label>
+                <input type="text" name="cardholder_name" required class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="John Doe">
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Month</label>
+                    <input type="number" name="expiry_month" min="1" max="12" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="MM">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Expiry Year</label>
+                    <input type="number" name="expiry_year" min="2024" class="w-full px-3 py-2 border border-gray-300 rounded-lg" placeholder="YYYY">
+                </div>
+            </div>
+            <div class="flex items-center">
+                <input type="checkbox" name="is_default" id="is_default" class="mr-2">
+                <label for="is_default" class="text-sm text-gray-700">Set as default payment method</label>
+            </div>
+            <div class="flex gap-3 pt-4">
+                <button type="submit" class="btn-primary flex-1">Add Payment Method</button>
+                <button type="button" onclick="closeAddPaymentMethod()" class="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let selectedPaymentMethodId = null;
+    
+    function loadPaymentMethods() {
+        fetch('/api/users/payment-methods')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                return [];
+            })
+            .then(paymentMethods => {
+                const listContainer = document.getElementById('payment-methods-list');
+                
+                if (paymentMethods.length === 0) {
+                    listContainer.innerHTML = '<p class="text-gray-500 text-sm">No payment methods added yet.</p>';
+                    return;
+                }
+                
+                listContainer.innerHTML = paymentMethods.map(pm => {
+                    const isSelected = selectedPaymentMethodId === pm.id;
+                    const borderClass = isSelected ? 'border-orange-500' : 'border-gray-200';
+                    const defaultBadge = pm.is_default ? '<span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded">Default</span>' : '';
+                    const expiredBadge = pm.is_expired ? '<span class="bg-red-500 text-white text-xs px-2 py-0.5 rounded flex items-center gap-1"><span>❗️</span> Expired On ' + String(pm.expiry_month).padStart(2, '0') + '/' + pm.expiry_year + '</span>' : '';
+                    
+                    const cardTypeLabel = pm.card_type.includes('Credit') || pm.card_type.includes('Debit') ? pm.card_type : pm.card_type + ' Credit card';
+                    
+                    return `
+                        <div onclick="selectPaymentMethod(${pm.id})" class="border-2 ${borderClass} rounded-lg p-4 cursor-pointer hover:border-gray-300 transition ${isSelected ? 'bg-orange-50' : 'bg-white'}">
+                            <div class="flex items-start justify-between mb-2">
+                                <div class="flex-1">
+                                    <div class="font-medium text-sm mb-1">${pm.card_type}</div>
+                                    <div class="text-xs text-gray-600">${cardTypeLabel} ending in .... ${pm.last_four}</div>
+                                </div>
+                                ${defaultBadge}
+                            </div>
+                            ${expiredBadge ? '<div class="mt-2">' + expiredBadge + '</div>' : ''}
+                        </div>
+                    `;
+                }).join('');
+                
+                // Select first payment method if none selected
+                if (!selectedPaymentMethodId && paymentMethods.length > 0) {
+                    selectPaymentMethod(paymentMethods[0].id);
+                }
+            })
+            .catch(() => {
+                const listContainer = document.getElementById('payment-methods-list');
+                listContainer.innerHTML = '<p class="text-red-500 text-sm">Error loading payment methods.</p>';
+            });
+    }
+    
+    function selectPaymentMethod(paymentMethodId) {
+        selectedPaymentMethodId = paymentMethodId;
+        loadPaymentMethods(); // Reload to update selection
+        
+        fetch(`/api/users/payment-methods/${paymentMethodId}`)
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Failed to load payment method');
+            })
+            .then(pm => {
+                const detailsContainer = document.getElementById('payment-method-details');
+                const defaultBadge = pm.is_default ? '<span class="bg-green-500 text-white text-xs px-2 py-0.5 rounded absolute top-4 right-4">Default</span>' : '';
+                const cardColor = getCardColor(pm.card_type);
+                
+                detailsContainer.innerHTML = `
+                    <div class="relative">
+                        ${defaultBadge}
+                        <div class="${cardColor} rounded-lg p-6 mb-6 text-white" style="aspect-ratio: 1.586 / 1; max-width: 400px;">
+                            <div class="h-full flex flex-col justify-between">
+                                <div class="text-sm opacity-90">${pm.card_type}</div>
+                                <div class="text-2xl font-bold">.... ${pm.last_four}</div>
+                                <div class="text-sm">${pm.cardholder_name}</div>
+                            </div>
+                        </div>
+                        <div class="space-y-2">
+                            <div><span class="font-medium">${pm.card_type}</span></div>
+                            <div class="text-sm text-gray-600">${pm.card_type.includes('Credit') || pm.card_type.includes('Debit') ? pm.card_type : pm.card_type + ' Credit'} card ending in .... ${pm.last_four}</div>
+                            <div class="text-sm text-gray-600">${pm.cardholder_name}</div>
+                            <div class="pt-4">
+                                <a href="#" onclick="editPaymentMethod(${pm.id}); return false;" class="text-blue-600 hover:underline text-sm">Edit</a>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(() => {
+                const detailsContainer = document.getElementById('payment-method-details');
+                detailsContainer.innerHTML = '<p class="text-red-500">Error loading payment method details.</p>';
+            });
+    }
+    
+    function getCardColor(cardType) {
+        const colors = {
+            'Visa': 'bg-blue-600',
+            'Mastercard': 'bg-purple-600',
+            'American Express': 'bg-green-600',
+            'Discover': 'bg-orange-600'
+        };
+        return colors[cardType] || 'bg-gray-600';
+    }
+    
+    function openAddPaymentMethod() {
+        document.getElementById('add-payment-modal').classList.remove('hidden');
+    }
+    
+    function closeAddPaymentMethod() {
+        document.getElementById('add-payment-modal').classList.add('hidden');
+        document.getElementById('add-payment-form').reset();
+    }
+    
+    function editPaymentMethod(paymentMethodId) {
+        // TODO: Implement edit functionality
+        alert('Edit functionality coming soon!');
+    }
+    
+    document.getElementById('add-payment-form').addEventListener('submit', (e) => {
+        e.preventDefault();
+        const formData = new FormData(e.target);
+        const data = {
+            card_type: formData.get('card_type'),
+            last_four: formData.get('last_four'),
+            cardholder_name: formData.get('cardholder_name'),
+            expiry_month: formData.get('expiry_month') ? parseInt(formData.get('expiry_month')) : null,
+            expiry_year: formData.get('expiry_year') ? parseInt(formData.get('expiry_year')) : null,
+            is_default: formData.get('is_default') === 'on'
+        };
+        
+        fetch('/api/users/payment-methods', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => {
+            if (response.ok) {
+                return response.json();
+            }
+            return response.json().then(err => Promise.reject(err));
+        })
+        .then(paymentMethod => {
+            closeAddPaymentMethod();
+            loadPaymentMethods();
+            selectPaymentMethod(paymentMethod.id);
+        })
+        .catch(error => {
+            alert(error.error || 'Failed to add payment method');
+        });
+    });
+    
+    // Close modal when clicking outside
+    document.getElementById('add-payment-modal').addEventListener('click', (e) => {
+        if (e.target.id === 'add-payment-modal') {
+            closeAddPaymentMethod();
+        }
+    });
+    
+    loadPaymentMethods();
+</script>
+{% endblock %}
+

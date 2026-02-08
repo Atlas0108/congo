@@ -9,6 +9,7 @@ class Order(db.Model):
     total_amount = db.Column(db.Numeric(10, 2), nullable=False)
     status = db.Column(db.String(50), default='pending')  # pending, processing, shipped, delivered, cancelled
     shipping_address = db.Column(db.Text, nullable=False)
+    payment_method_id = db.Column(db.Integer, db.ForeignKey('payment_methods.id'), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -22,6 +23,7 @@ class Order(db.Model):
             'total_amount': float(self.total_amount) if self.total_amount else 0.0,
             'status': self.status,
             'shipping_address': self.shipping_address,
+            'payment_method_id': self.payment_method_id,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'items': [item.to_dict() for item in self.items]
         }

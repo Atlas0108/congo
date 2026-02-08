@@ -26,10 +26,17 @@ class User(db.Model):
         return check_password_hash(self.password_hash, password)
     
     def to_dict(self):
+        name = None
+        if self.first_name or self.last_name:
+            name = f"{self.first_name or ''} {self.last_name or ''}".strip()
+        elif self.username:
+            name = self.username
+        
         return {
             'id': self.id,
             'username': self.username,
             'email': self.email,
+            'name': name,
             'first_name': self.first_name,
             'last_name': self.last_name,
             'address': self.address,

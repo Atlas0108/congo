@@ -32,7 +32,7 @@ function checkAuth() {
 }
 
 // Add to cart (works for both logged in and guest users)
-function addToCart(productId) {
+function addToCart(productId, redirectToConfirmation = false) {
     const button = document.querySelector(`[data-product-id="${productId}"]`);
     
     fetch('/api/cart/', {
@@ -55,7 +55,14 @@ function addToCart(productId) {
     })
     .then(data => {
         updateCartCount();
-        // Change button to "In cart" text
+        
+        // If redirectToConfirmation is true (from product detail page), redirect to confirmation page
+        if (redirectToConfirmation) {
+            window.location.href = `/added-to-cart?product_id=${productId}`;
+            return;
+        }
+        
+        // Otherwise, change button to "In cart" text (for home page, products page, etc.)
         if (button) {
             const isFullWidth = button.classList.contains('btn-primary-full');
             const wrapperClass = isFullWidth ? 'block' : 'inline-block';
@@ -247,6 +254,12 @@ function loadDeliveryLocation() {
                     window.selectedAddressId = defaultAddress.id;
                     if (defaultAddress.city && defaultAddress.postal_code) {
                         cityZip.textContent = `${defaultAddress.city} ${defaultAddress.postal_code}`;
+                        
+                        // Update hero text if on home page
+                        const heroTitle = document.getElementById('hero-title');
+                        if (heroTitle && defaultAddress.city) {
+                            heroTitle.textContent = `Shop Local, Support ${defaultAddress.city}`;
+                        }
                         if (deliveryLocation) {
                             deliveryLocation.classList.remove('hidden');
                         }
@@ -389,6 +402,12 @@ function confirmAddressSelection() {
             if (deliveryLocation) {
                 deliveryLocation.classList.remove('hidden');
             }
+        }
+        
+        // Update hero text if on home page
+        const heroTitle = document.getElementById('hero-title');
+        if (heroTitle && address.city) {
+            heroTitle.textContent = `Shop Local, Support ${address.city}`;
         }
         
         // Update checkout address if on cart page

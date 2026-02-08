@@ -2,6 +2,8 @@ from flask import Blueprint, request, jsonify, session
 from backend.app import db
 from backend.models.user import User
 from backend.models.address import Address
+from backend.models.payment_method import PaymentMethod
+from datetime import datetime
 
 bp = Blueprint('users', __name__, url_prefix='/api/users')
 
@@ -304,4 +306,127 @@ def set_default_address(address_id):
     db.session.commit()
     
     return jsonify(address.to_dict())
+
+# Payment method endpoints
+@bp.route('/payment-methods', methods=['GET'])
+def get_payment_methods():
+    """Get all payment methods for the current user"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    payment_methods = PaymentMethod.query.filter_by(user_id=user_id).order_by(PaymentMethod.is_default.desc(), PaymentMethod.created_at.desc()).all()
+    return jsonify([pm.to_dict() for pm in payment_methods])
+
+@bp.route('/payment-methods', methods=['POST'])
+def create_payment_method():
+    """Create a new payment method for the current user"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    data = request.get_json()
+    
+    # Validate required fields
+    required_fields = ['card_type', 'last_four', 'cardholder_name']
+    for field in required_fields:
+        if field not in data:
+            return jsonify({'error': f'{field} is required'}), 400
+    
+    # Check if this should be default
+    if data.get('is_default'):
+        PaymentMethod.query.filter_by(user_id=user_id, is_default=True).update({'is_default': False})
+    
+    # Check if expired
+    is_expired = False
+    if data.get('expiry_month') and data.get('expiry_year'):
+        expiry_date = datetime(data['expiry_year'], data['expiry_month'], 1)
+        if expiry_date < datetime.now():
+            is_expired = True
+    
+    payment_method = PaymentMethod(
+        user_id=user_id,
+        card_type=data['card_type'],
+        last_four=data['last_four'],
+        cardholder_name=data['cardholder_name'],
+        expiry_month=data.get('expiry_month'),
+        expiry_year=data.get('expiry_year'),
+        is_default=data.get('is_default', False),
+        is_expired=is_expired
+    )
+    
+    db.session.add(payment_method)
+    db.session.commit()
+    
+    return jsonify(payment_method.to_dict()), 201
+
+@bp.route('/payment-methods/<int:payment_method_id>', methods=['GET'])
+def get_payment_method(payment_method_id):
+    """Get a specific payment method"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    payment_method = PaymentMethod.query.filter_by(id=payment_method_id, user_id=user_id).first_or_404()
+    return jsonify(payment_method.to_dict())
+
+@bp.route('/payment-methods/<int:payment_method_id>', methods=['PUT'])
+def update_payment_method(payment_method_id):
+    """Update a payment method"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    payment_method = PaymentMethod.query.filter_by(id=payment_method_id, user_id=user_id).first_or_404()
+    data = request.get_json()
+    
+    if 'cardholder_name' in data:
+        payment_method.cardholder_name = data['cardholder_name']
+    if 'expiry_month' in data:
+        payment_method.expiry_month = data['expiry_month']
+    if 'expiry_year' in data:
+        payment_method.expiry_year = data['expiry_year']
+    
+    # Check if expired
+    if payment_method.expiry_month and payment_method.expiry_year:
+        expiry_date = datetime(payment_method.expiry_year, payment_method.expiry_month, 1)
+        payment_method.is_expired = expiry_date < datetime.now()
+    
+    if 'is_default' in data and data['is_default']:
+        PaymentMethod.query.filter_by(user_id=user_id, is_default=True).update({'is_default': False})
+        payment_method.is_default = True
+    
+    db.session.commit()
+    return jsonify(payment_method.to_dict())
+
+@bp.route('/payment-methods/<int:payment_method_id>', methods=['DELETE'])
+def delete_payment_method(payment_method_id):
+    """Delete a payment method"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    payment_method = PaymentMethod.query.filter_by(id=payment_method_id, user_id=user_id).first_or_404()
+    db.session.delete(payment_method)
+    db.session.commit()
+    
+    return jsonify({'message': 'Payment method deleted successfully'}), 200
+
+@bp.route('/payment-methods/<int:payment_method_id>/set-default', methods=['POST'])
+def set_default_payment_method(payment_method_id):
+    """Set a payment method as default"""
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    payment_method = PaymentMethod.query.filter_by(id=payment_method_id, user_id=user_id).first_or_404()
+    
+    # Unset other defaults
+    PaymentMethod.query.filter_by(user_id=user_id, is_default=True).update({'is_default': False})
+    
+    # Set this as default
+    payment_method.is_default = True
+    db.session.commit()
+    
+    return jsonify(payment_method.to_dict())
 

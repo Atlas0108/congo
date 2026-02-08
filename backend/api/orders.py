@@ -42,9 +42,19 @@ def create_order():
     
     data = request.get_json()
     shipping_address = data.get('shipping_address')
+    payment_method_id = data.get('payment_method_id')
     
     if not shipping_address:
         return jsonify({'error': 'Shipping address is required'}), 400
+    
+    if not payment_method_id:
+        return jsonify({'error': 'Payment method is required'}), 400
+    
+    # Verify payment method belongs to user
+    from backend.models.payment_method import PaymentMethod
+    payment_method = PaymentMethod.query.filter_by(id=payment_method_id, user_id=user_id).first()
+    if not payment_method:
+        return jsonify({'error': 'Invalid payment method'}), 400
     
     # Get cart items
     cart_items = CartItem.query.filter_by(user_id=user_id).all()
@@ -74,6 +84,7 @@ def create_order():
         user_id=user_id,
         total_amount=total_amount,
         shipping_address=shipping_address,
+        payment_method_id=payment_method_id,
         status='pending'
     )
     db.session.add(order)

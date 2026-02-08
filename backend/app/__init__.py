@@ -76,6 +76,18 @@ def create_app():
     def add_address_page():
         return render_template('add_address.html')
     
+    @app.route('/account/payment-methods')
+    def payment_methods_page():
+        return render_template('payment_methods.html')
+    
+    @app.route('/account/security')
+    def security_page():
+        return render_template('security.html')
+    
+    @app.route('/added-to-cart')
+    def added_to_cart_page():
+        return render_template('added_to_cart.html')
+    
     # Create tables
     with app.app_context():
         db.create_all()

@@ -39,9 +39,9 @@ def get_cart():
     cart_id = get_cart_identifier()
     
     if cart_id['user_id']:
-        cart_items = CartItem.query.filter_by(user_id=cart_id['user_id']).all()
+        cart_items = CartItem.query.filter_by(user_id=cart_id['user_id']).order_by(CartItem.created_at.desc()).all()
     else:
-        cart_items = CartItem.query.filter_by(session_id=cart_id['session_id']).all()
+        cart_items = CartItem.query.filter_by(session_id=cart_id['session_id']).order_by(CartItem.created_at.desc()).all()
     
     return jsonify([item.to_dict() for item in cart_items])
 

@@ -4,6 +4,7 @@ from backend.models.product import Product
 from backend.models.order import Order, OrderItem
 from backend.models.cart import CartItem
 from backend.models.address import Address
+from backend.models.payment_method import PaymentMethod
 
-__all__ = ['User', 'Product', 'Order', 'OrderItem', 'CartItem', 'Address']
+__all__ = ['User', 'Product', 'Order', 'OrderItem', 'CartItem', 'Address', 'PaymentMethod']
 

@@ -54,11 +54,16 @@ function addToCart(productId, redirectToConfirmation = false) {
         return response.json();
     })
     .then(data => {
-        updateCartCount();
-        
+        // Update cart count and wait for it to complete
+        return updateCartCount().then(() => data);
+    })
+    .then(data => {
         // If redirectToConfirmation is true (from product detail page), redirect to confirmation page
         if (redirectToConfirmation) {
-            window.location.href = `/added-to-cart?product_id=${productId}`;
+            // Small delay to ensure cart is fully updated in database
+            setTimeout(() => {
+                window.location.href = `/added-to-cart?product_id=${productId}`;
+            }, 100);
             return;
         }
         
@@ -97,7 +102,7 @@ function updateCartButtonStates() {
 
 // Update cart count (works for both logged in and guest users)
 function updateCartCount() {
-    fetch('/api/cart/')
+    return fetch('/api/cart/')
         .then(response => {
             if (response.ok) {
                 return response.json();
@@ -105,19 +110,21 @@ function updateCartCount() {
             return [];
         })
         .then(cart => {
-            const count = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const count = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
             const cartCountEl = document.getElementById('cart-count');
             if (cartCountEl) {
                 cartCountEl.textContent = count;
             }
             // Also update button states
             updateCartButtonStatesFromCart(cart);
+            return cart; // Return cart data for chaining
         })
         .catch(() => {
             const cartCountEl = document.getElementById('cart-count');
             if (cartCountEl) {
                 cartCountEl.textContent = '0';
             }
+            return []; // Return empty array on error
         });
 }
 
@@ -203,6 +210,10 @@ function selectCategory(type, value, displayText) {
     const categoryDisplay = document.getElementById(`${type}-category-display`);
     const dropdown = document.getElementById(`${type}-category-dropdown`);
     
+    // Save to sessionStorage
+    sessionStorage.setItem('selectedCategory', value);
+    sessionStorage.setItem('selectedCategoryDisplay', displayText);
+    
     if (categoryValue) {
         categoryValue.value = value;
     }
@@ -258,7 +269,7 @@ function loadDeliveryLocation() {
                         // Update hero text if on home page
                         const heroTitle = document.getElementById('hero-title');
                         if (heroTitle && defaultAddress.city) {
-                            heroTitle.textContent = `Shop Local, Support ${defaultAddress.city}`;
+                            heroTitle.innerHTML = `<span style="font-weight: 300;">Support</span> ${defaultAddress.city}'s <span style="font-weight: 300;">Local Businesses</span>`;
                         }
                         if (deliveryLocation) {
                             deliveryLocation.classList.remove('hidden');
@@ -407,7 +418,16 @@ function confirmAddressSelection() {
         // Update hero text if on home page
         const heroTitle = document.getElementById('hero-title');
         if (heroTitle && address.city) {
-            heroTitle.textContent = `Shop Local, Support ${address.city}`;
+            heroTitle.innerHTML = `<span style="font-weight: 300;">Support</span> ${address.city}'s <span style="font-weight: 300;">Local Businesses</span>`;
+        }
+        
+        // Update local products page title if on products page with local=true
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.get('local') === 'true') {
+            const productsPageTitle = document.querySelector('h1');
+            if (productsPageTitle && address.city) {
+                productsPageTitle.textContent = `Shop ${address.city}`;
+            }
         }
         
         // Update checkout address if on cart page
@@ -578,6 +598,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (mobileSearchInput && searchParam) {
         mobileSearchInput.value = searchParam;
+    }
+    
+    // Restore category selection from sessionStorage
+    const savedCategory = sessionStorage.getItem('selectedCategory');
+    const savedCategoryDisplay = sessionStorage.getItem('selectedCategoryDisplay');
+    if (savedCategory !== null && savedCategoryDisplay) {
+        // Only restore if not on products page with a category URL parameter
+        // But still restore even if local=true, as local is a filter, not a category
+        const categoryParam = urlParams.get('category');
+        if (!categoryParam) {
+            selectCategory('header', savedCategory, savedCategoryDisplay);
+            selectCategory('mobile', savedCategory, savedCategoryDisplay);
+        }
     }
     
     // Mobile search toggle

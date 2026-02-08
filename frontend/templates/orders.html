@@ -38,16 +38,43 @@
 
     fetch('/api/orders/')
         .then(response => {
-            if (response.ok) {
-                return response.json();
+            if (response.status === 401) {
+                // User is not authenticated
+                throw new Error('Not authenticated');
             }
-            throw new Error('Not authenticated');
+            if (!response.ok) {
+                throw new Error('Failed to load orders');
+            }
+            return response.json();
         })
         .then(orders => {
             const container = document.getElementById('orders-container');
+            
+            // Check if orders is an array
+            if (!Array.isArray(orders)) {
+                container.innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Error loading orders. Please try again.</p></div>';
+                return;
+            }
+            
+            // Check if orders array is empty
             if (orders.length === 0) {
-                container.innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">You have no orders yet.</p></div>';
-            } else {
+                // User is logged in but has no orders
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <p class="text-center text-gray-500 mb-4">You have no orders yet.</p>
+                        <div class="text-center">
+                            <a href="/products" class="btn-primary btn-primary-md inline-block">
+                                Start Shopping
+                            </a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+            
+            // User has orders - display them
+            if (orders.length > 0) {
+                // User has orders
                 container.innerHTML = orders.map(order => {
                     const orderDate = formatDate(order.created_at);
                     const statusDisplay = getStatusDisplay(order.status, order.created_at);
@@ -149,8 +176,22 @@
                 }).join('');
             }
         })
-        .catch(() => {
-            document.getElementById('orders-container').innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Please <a href="/login" style="color: #004FFF;" class="hover:opacity-80">login</a> to view your orders.</p></div>';
+        .catch(error => {
+            const container = document.getElementById('orders-container');
+            if (error.message === 'Not authenticated') {
+                // User is not logged in
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <p class="text-center text-gray-500 mb-4">Please <a href="/login" style="color: #004FFF;" class="hover:opacity-80">login</a> to view your orders.</p>
+                        <div class="text-center">
+                            <a href="/login" class="btn-primary btn-primary-md inline-block">Login</a>
+                        </div>
+                    </div>
+                `;
+            } else {
+                // Other error
+                container.innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Error loading orders. Please try again.</p></div>';
+            }
         });
 </script>
 {% endblock %}

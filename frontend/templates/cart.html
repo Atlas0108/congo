@@ -83,10 +83,12 @@
                                 <div class="flex gap-4">
                                     <!-- Product Image -->
                                     <div class="flex-shrink-0">
-                                        <img src="${item.product.image_url || '/static/images/placeholder.svg'}" 
-                                             alt="${item.product.name}" 
-                                             class="w-32 h-32 object-contain bg-gray-50 rounded"
-                                             onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
+                                        <a href="/product/${item.product.id}">
+                                            <img src="${item.product.image_url || '/static/images/placeholder.svg'}" 
+                                                 alt="${item.product.name}" 
+                                                 class="w-32 h-32 object-contain bg-gray-50 rounded hover:opacity-80 transition-opacity"
+                                                 onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
+                                        </a>
                                     </div>
                                     
                                     <!-- Product Details -->
@@ -98,27 +100,10 @@
                                             </a>
                                         </h3>
                                         
-                                        <!-- Price -->
-                                        <div class="mb-2">
-                                            <span class="text-lg font-semibold text-gray-900">$${item.product.price.toFixed(2)}</span>
-                                        </div>
-                                        
                                         <!-- Stock Status -->
                                         <div class="mb-2">
                                             <span class="${stockColor} text-sm font-medium">${stockStatus}</span>
                                         </div>
-                                        
-                                        <!-- Returns Policy -->
-                                        <div class="mb-2">
-                                            <span class="text-sm text-blue-600">FREE Returns</span>
-                                        </div>
-                                        
-                                        <!-- Product Specifications -->
-                                        ${item.product.category ? `
-                                            <div class="mb-2 text-sm text-gray-600">
-                                                <span class="font-medium">Category:</span> ${item.product.category}
-                                            </div>
-                                        ` : ''}
                                         
                                         <!-- Quantity Selector and Actions -->
                                         <div class="flex items-center gap-4 mt-3">
@@ -152,9 +137,6 @@
                                                 </button>
                                                 <button onclick="saveForLater(${item.id})" class="text-blue-600 hover:underline">
                                                     Save for later
-                                                </button>
-                                                <button onclick="shareItem(${item.id})" class="text-blue-600 hover:underline">
-                                                    Share
                                                 </button>
                                             </div>
                                         </div>
@@ -217,15 +199,13 @@
     }
     
     function removeFromCart(itemId) {
-        if (confirm('Are you sure you want to remove this item from your cart?')) {
-            fetch(`/api/cart/${itemId}`, {
-                method: 'DELETE'
-            })
-            .then(() => {
-                loadCart();
-                updateCartCount();
-            });
-        }
+        fetch(`/api/cart/${itemId}`, {
+            method: 'DELETE'
+        })
+        .then(() => {
+            loadCart();
+            updateCartCount();
+        });
     }
     
     function saveForLater(itemId) {

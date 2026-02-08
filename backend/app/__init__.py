@@ -116,6 +116,17 @@ def create_app():
             except Exception as e:
                 print(f"Note: Could not add role column (may already exist): {e}")
             
+            # Add default_category column to users table if it doesn't exist
+            try:
+                user_columns = [col['name'] for col in inspector.get_columns('users')]
+                if 'default_category' not in user_columns:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE users ADD COLUMN default_category VARCHAR(100)"))
+                        conn.commit()
+                    print("✓ Added default_category column to users table")
+            except Exception as e:
+                print(f"Note: Could not add default_category column (may already exist): {e}")
+            
             # Add merchant_id column to products table if it doesn't exist
             try:
                 product_columns = [col['name'] for col in inspector.get_columns('products')]

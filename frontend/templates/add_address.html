@@ -180,7 +180,7 @@
         </div>
         
         <!-- Make this my default address -->
-        <div class="flex items-center">
+        <div id="default-address-checkbox" class="flex items-center hidden">
             <input 
                 type="checkbox" 
                 id="is_default" 
@@ -256,6 +256,27 @@
         }
     }
     
+    // Check if user has existing addresses
+    async function checkExistingAddresses() {
+        try {
+            const response = await fetch('/api/users/addresses', {
+                credentials: 'include'
+            });
+            if (response.ok) {
+                const addresses = await response.json();
+                // If user has no addresses, hide the checkbox (will be set as default automatically)
+                if (addresses.length === 0) {
+                    document.getElementById('default-address-checkbox').classList.add('hidden');
+                } else {
+                    // Show checkbox if user already has addresses
+                    document.getElementById('default-address-checkbox').classList.remove('hidden');
+                }
+            }
+        } catch (error) {
+            console.error('Error checking existing addresses:', error);
+        }
+    }
+    
     // Toggle delivery instructions section
     function toggleDeliveryInstructions() {
         const section = document.getElementById('delivery-instructions-section');
@@ -279,6 +300,9 @@
         errorMessage.classList.add('hidden');
         
         const formData = new FormData(form);
+        const checkboxContainer = document.getElementById('default-address-checkbox');
+        const isCheckboxVisible = !checkboxContainer.classList.contains('hidden');
+        
         const data = {
             name: formData.get('name'),
             address_line1: formData.get('address_line1'),
@@ -288,7 +312,7 @@
             postal_code: formData.get('postal_code'),
             country: formData.get('country'),
             phone: formData.get('phone') || null,
-            is_default: formData.get('is_default') === 'on',
+            is_default: isCheckboxVisible ? (formData.get('is_default') === 'on') : true, // Auto-set to true if checkbox is hidden
             delivery_instructions: formData.get('delivery_instructions') || null
         };
         
@@ -317,8 +341,9 @@
         }
     });
     
-    // Load user data on page load
+    // Load user data and check existing addresses on page load
     loadUserData();
+    checkExistingAddresses();
 </script>
 {% endblock %}
 

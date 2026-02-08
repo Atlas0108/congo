@@ -33,13 +33,13 @@
             <div class="mb-6">
                 <div class="text-sm text-gray-700 mb-1">Cart Subtotal:</div>
                 <div class="text-2xl font-semibold">
-                    $<span id="cart-subtotal-dollars">0</span><sup class="text-base font-normal">.<span id="cart-subtotal-cents">00</span></sup>
+                    $0<sup class="text-base font-normal">.00</sup>
                 </div>
             </div>
             
             <div class="space-y-3">
-                <a href="/cart" id="proceed-to-checkout-btn" class="btn-success btn-primary-lg block text-center whitespace-nowrap" style="width: 280px;">
-                    Proceed to checkout (<span id="cart-item-count">0</span> items)
+                <a href="/cart" class="btn-success btn-primary-lg block text-center whitespace-nowrap" style="width: 280px;">
+                    Proceed to checkout
                 </a>
                 <a href="/cart" class="block bg-white border border-gray-300 hover:bg-gray-50 text-center font-medium py-3 px-4 rounded-lg transition whitespace-nowrap" style="width: 280px;">
                     Go to Cart
@@ -102,48 +102,6 @@
             console.error('Error loading product:', error);
         });
     
-    // Load cart summary
-    function loadCartSummary() {
-        // Add a small delay to ensure cart is updated after adding item
-        setTimeout(() => {
-            fetch('/api/cart/')
-                .then(response => {
-                    if (response.ok) {
-                        return response.json();
-                    }
-                    return [];
-                })
-                .then(cart => {
-                    let subtotal = 0;
-                    let itemCount = 0;
-                    
-                    if (Array.isArray(cart) && cart.length > 0) {
-                        cart.forEach(item => {
-                            if (item.product && item.product.price && item.quantity) {
-                                subtotal += parseFloat(item.product.price) * parseInt(item.quantity);
-                                itemCount += parseInt(item.quantity);
-                            }
-                        });
-                    }
-                    
-                    // Update cart subtotal
-                    const priceParts = subtotal.toFixed(2).split('.');
-                    const dollarsEl = document.getElementById('cart-subtotal-dollars');
-                    const centsEl = document.getElementById('cart-subtotal-cents');
-                    if (dollarsEl) dollarsEl.textContent = priceParts[0];
-                    if (centsEl) centsEl.textContent = priceParts[1];
-                    
-                    // Update item count
-                    const countEl = document.getElementById('cart-item-count');
-                    if (countEl) countEl.textContent = itemCount;
-                })
-                .catch(error => {
-                    console.error('Error loading cart:', error);
-                });
-        }, 300);
-    }
-    
-    loadCartSummary();
 </script>
 {% endblock %}
 

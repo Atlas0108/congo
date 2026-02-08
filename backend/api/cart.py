@@ -36,12 +36,14 @@ def get_cart_identifier():
 @bp.route('/', methods=['GET'])
 def get_cart():
     """Get current user's or guest's cart"""
+    from sqlalchemy.orm import joinedload
+    
     cart_id = get_cart_identifier()
     
     if cart_id['user_id']:
-        cart_items = CartItem.query.filter_by(user_id=cart_id['user_id']).order_by(CartItem.created_at.desc()).all()
+        cart_items = CartItem.query.options(joinedload(CartItem.product)).filter_by(user_id=cart_id['user_id']).order_by(CartItem.created_at.desc()).all()
     else:
-        cart_items = CartItem.query.filter_by(session_id=cart_id['session_id']).order_by(CartItem.created_at.desc()).all()
+        cart_items = CartItem.query.options(joinedload(CartItem.product)).filter_by(session_id=cart_id['session_id']).order_by(CartItem.created_at.desc()).all()
     
     return jsonify([item.to_dict() for item in cart_items])
 

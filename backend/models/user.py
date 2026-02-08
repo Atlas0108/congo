@@ -14,6 +14,7 @@ class User(db.Model):
     address = db.Column(db.Text)
     phone = db.Column(db.String(20))
     role = db.Column(db.String(20), default='shopper')  # 'shopper' or 'merchant'
+    default_category = db.Column(db.String(100), nullable=True)  # Default category preference (e.g., 'local')
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -43,6 +44,7 @@ class User(db.Model):
             'address': self.address,
             'phone': self.phone,
             'role': self.role,
+            'default_category': self.default_category,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 

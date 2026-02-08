@@ -3,25 +3,69 @@
 {% block title %}Products - Congo{% endblock %}
 
 {% block content %}
-<div class="mb-6">
-    <h1 class="text-3xl font-bold mb-4">Products</h1>
-    
-    <!-- Filter -->
-    <div class="flex flex-col md:flex-row gap-4 mb-6">
-        <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
-            <option value="">All Categories</option>
-        </select>
+<style>
+    /* Override main container for local products page to remove spacing */
+    #local-products-page main {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    /* Background image at 0.3 opacity with fade overlay */
+    #local-products-page #products-page-wrapper::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background-image: url("{{ url_for('static', filename='images/walnut-creek.webp') }}");
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+        opacity: 0.3;
+        z-index: 0;
+    }
+    /* Gradient fade overlay */
+    #local-products-page #products-page-wrapper::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 30%, rgba(255, 255, 255, 0.7) 60%, rgba(255, 255, 255, 0.95) 85%, rgba(255, 255, 255, 1) 100%);
+        pointer-events: none;
+        z-index: 1;
+    }
+    #local-products-page #products-page-wrapper {
+        position: relative;
+    }
+    #local-products-page #products-page-wrapper > * {
+        position: relative;
+        z-index: 2;
+    }
+</style>
+<div id="products-page-wrapper" class="min-h-screen">
+    <div class="mb-6">
+        <h1 class="text-3xl font-bold mb-4">Products</h1>
+        
+        <!-- Filter -->
+        <div id="category-filter-container" class="flex flex-col md:flex-row gap-4 mb-6">
+            <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
+                <option value="">All Categories</option>
+            </select>
+        </div>
     </div>
-</div>
 
-<!-- Products Grid -->
-<div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <!-- Products will be loaded here -->
-</div>
+    <!-- Products Grid -->
+    <div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Products will be loaded here -->
+    </div>
 
-<!-- Pagination -->
-<div id="pagination" class="flex justify-center space-x-2">
-    <!-- Pagination will be loaded here -->
+    <!-- Pagination -->
+    <div id="pagination" class="flex justify-center space-x-2">
+        <!-- Pagination will be loaded here -->
+    </div>
 </div>
 {% endblock %}
 
@@ -161,20 +205,123 @@
     const urlParams = new URLSearchParams(window.location.search);
     const searchParam = urlParams.get('search');
     const localParam = urlParams.get('local');
+    const categoryParam = urlParams.get('category');
     
     if (searchParam) {
         currentSearch = searchParam;
     }
     if (localParam === 'true') {
         currentLocal = true;
-        // Update page title
-        document.querySelector('h1').textContent = 'Local Products';
+        
+        // Add ID to body to target with CSS
+        document.body.id = 'local-products-page';
+        
+        // Apply background image with fade effect
+        const wrapper = document.getElementById('products-page-wrapper');
+        if (wrapper) {
+            // Background image and fade are handled by CSS pseudo-elements
+            wrapper.style.position = 'relative';
+            wrapper.style.backgroundSize = 'cover';
+            wrapper.style.backgroundPosition = 'center';
+            wrapper.style.backgroundRepeat = 'no-repeat';
+            wrapper.style.minHeight = '100vh';
+            wrapper.style.width = '100%';
+            wrapper.style.margin = '0';
+            wrapper.style.padding = '0';
+            
+            // Add padding to content elements for readability
+            const titleDiv = wrapper.querySelector('.mb-6');
+            if (titleDiv) {
+                titleDiv.style.padding = '2rem 2rem 1rem';
+            }
+            const productsContainer = document.getElementById('products-container');
+            if (productsContainer) {
+                productsContainer.style.padding = '0 2rem';
+            }
+            const pagination = document.getElementById('pagination');
+            if (pagination) {
+                pagination.style.padding = '2rem';
+            }
+        }
+        
+        // Get city from delivery location or saved addresses
+        function updateLocalProductsTitle() {
+            const cityZip = document.getElementById('delivery-city-zip');
+            let city = 'Your City';
+            
+            if (cityZip && cityZip.textContent) {
+                // Extract city from "City ZIP" format
+                const cityZipText = cityZip.textContent.trim();
+                const cityMatch = cityZipText.match(/^([^0-9]+)/);
+                if (cityMatch) {
+                    city = cityMatch[1].trim();
+                }
+            } else if (window.savedAddresses && window.savedAddresses.length > 0) {
+                // Try to get city from saved addresses
+                const selectedAddress = window.savedAddresses.find(addr => addr.id === window.selectedAddressId) ||
+                                      window.savedAddresses.find(addr => addr.is_default) ||
+                                      window.savedAddresses[0];
+                if (selectedAddress && selectedAddress.city) {
+                    city = selectedAddress.city;
+                }
+            }
+            
+            // Update page title
+            const titleElement = document.querySelector('h1');
+            if (titleElement) {
+                titleElement.textContent = `Shop ${city}`;
+            }
+        }
+        
+        // Update title immediately if city is available, otherwise wait for addresses to load
+        updateLocalProductsTitle();
+        
+        // Also try to update after a short delay in case addresses are still loading
+        setTimeout(updateLocalProductsTitle, 500);
+        
+        // Also update when addresses are loaded
+        const checkInterval = setInterval(() => {
+            if (window.savedAddresses && window.savedAddresses.length > 0) {
+                updateLocalProductsTitle();
+                clearInterval(checkInterval);
+            }
+        }, 200);
+        
+        // Hide category filter dropdown on local products page
+        const categoryFilterContainer = document.getElementById('category-filter-container');
+        if (categoryFilterContainer) {
+            categoryFilterContainer.style.display = 'none';
+        }
+        // Clear category filter to show all local products
+        currentCategory = '';
+    } else {
+        // Load category from URL parameter or sessionStorage (only when not on local page)
+        if (categoryParam) {
+            currentCategory = categoryParam;
+            sessionStorage.setItem('selectedCategory', categoryParam);
+            sessionStorage.setItem('selectedCategoryDisplay', categoryParam);
+        } else {
+            // Load from sessionStorage if no URL parameter
+            const savedCategory = sessionStorage.getItem('selectedCategory');
+            if (savedCategory) {
+                currentCategory = savedCategory;
+            }
+        }
+        
+        // Set the category filter dropdown value
+        const categoryFilter = document.getElementById('category-filter');
+        if (categoryFilter && currentCategory) {
+            categoryFilter.value = currentCategory;
+        }
     }
 
     // Event listeners
     document.getElementById('category-filter').addEventListener('change', (e) => {
         currentCategory = e.target.value;
         currentPage = 1;
+        // Save to sessionStorage
+        sessionStorage.setItem('selectedCategory', currentCategory);
+        sessionStorage.setItem('selectedCategoryDisplay', currentCategory);
         loadProducts(currentPage, currentCategory, currentSearch, currentLocal);
     });
 

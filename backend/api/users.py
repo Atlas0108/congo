@@ -204,8 +204,16 @@ def create_address():
         if not data.get(field):
             return jsonify({'error': f'{field} is required'}), 400
     
-    # If this is set as default, unset other defaults
+    # Check if user has any existing addresses
+    existing_addresses = Address.query.filter_by(user_id=user_id).count()
+    
+    # If this is the first address, automatically set it as default
+    # Otherwise, use the value from the request
     is_default = data.get('is_default', False)
+    if existing_addresses == 0:
+        is_default = True
+    
+    # If this is set as default, unset other defaults
     if is_default:
         Address.query.filter_by(user_id=user_id, is_default=True).update({'is_default': False})
     

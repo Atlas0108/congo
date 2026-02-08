@@ -92,6 +92,10 @@ def create_app():
     def merchant_profile_page():
         return render_template('merchant_profile.html')
     
+    @app.route('/merchant/onboard')
+    def merchant_onboarding_page():
+        return render_template('merchant_onboarding.html')
+    
     @app.route('/added-to-cart')
     def added_to_cart_page():
         return render_template('added_to_cart.html')

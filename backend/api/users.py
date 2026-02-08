@@ -463,3 +463,94 @@ def get_merchant(merchant_id):
     
     return jsonify(result)
 
+@bp.route('/merchants/onboard', methods=['POST'])
+def onboard_merchant():
+    """Handle merchant onboarding application"""
+    from backend.models.merchant import MerchantProfile
+    import os
+    from werkzeug.utils import secure_filename
+    from datetime import datetime
+    
+    user_id = session.get('user_id')
+    if not user_id:
+        return jsonify({'error': 'Not authenticated'}), 401
+    
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+    
+    # Check if user already has a merchant profile
+    existing_profile = MerchantProfile.query.filter_by(user_id=user_id).first()
+    if existing_profile:
+        return jsonify({'error': 'Merchant profile already exists'}), 400
+    
+    try:
+        # Create upload directory if it doesn't exist
+        upload_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), 'frontend', 'static', 'uploads', 'merchants', str(user_id))
+        os.makedirs(upload_dir, exist_ok=True)
+        
+        # Handle file uploads
+        def save_file(file_field, filename_prefix):
+            if file_field not in request.files:
+                return None
+            file = request.files[file_field]
+            if file and file.filename:
+                filename = secure_filename(f"{filename_prefix}_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{file.filename}")
+                filepath = os.path.join(upload_dir, filename)
+                file.save(filepath)
+                return f"/static/uploads/merchants/{user_id}/{filename}"
+            return None
+        
+        # Save documents
+        business_license_url = save_file('business_license', 'business_license')
+        tax_document_url = save_file('tax_document', 'tax_document')
+        government_id_url = save_file('government_id', 'government_id')
+        logo_url = save_file('logo', 'logo')
+        
+        # Validate required documents
+        if not business_license_url or not tax_document_url or not government_id_url:
+            return jsonify({'error': 'All required documents must be uploaded'}), 400
+        
+        # Get form data
+        business_name = request.form.get('business_name')
+        if not business_name:
+            return jsonify({'error': 'Business name is required'}), 400
+        
+        # Create merchant profile
+        merchant_profile = MerchantProfile(
+            user_id=user_id,
+            business_name=business_name,
+            description=request.form.get('description', ''),
+            website=request.form.get('website', ''),
+            email=request.form.get('email', user.email),
+            phone=request.form.get('phone', user.phone),
+            address=request.form.get('address_line1', '') + (f", {request.form.get('address_line2', '')}" if request.form.get('address_line2') else ''),
+            city=request.form.get('city', ''),
+            state=request.form.get('state', ''),
+            postal_code=request.form.get('postal_code', ''),
+            country=request.form.get('country', 'US'),
+            logo_url=logo_url,
+            is_verified=False  # Will be verified by admin
+        )
+        
+        db.session.add(merchant_profile)
+        
+        # Update user role to merchant
+        user.role = 'merchant'
+        
+        # Store additional information (tax ID, banking info) in a separate table or as JSON
+        # For now, we'll store it in a simple way - in production, use encryption
+        # You might want to create a MerchantDocuments or MerchantBankingInfo model
+        # For this implementation, we'll just save the file paths
+        
+        db.session.commit()
+        
+        return jsonify({
+            'message': 'Merchant application submitted successfully',
+            'merchant_id': merchant_profile.id
+        }), 201
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'error': str(e)}), 500
+

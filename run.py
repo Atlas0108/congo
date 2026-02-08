@@ -1,11 +1,28 @@
 from backend.app import create_app
 import os
 import socket
+import threading
 from dotenv import load_dotenv
 
 load_dotenv()
 
 app = create_app()
+
+
+def fetch_product_images_in_background():
+    """Fetch images for products that don't have them (runs in background)"""
+    try:
+        from backend.utils.ensure_product_images import ensure_product_images
+
+        with app.app_context():
+            print("🖼️  Checking for products that need images...")
+            updated = ensure_product_images()
+            if updated > 0:
+                print(f"✅ Updated {updated} products with images")
+            else:
+                print("✅ All products already have images")
+    except Exception as e:
+        print(f"⚠️  Warning: Could not fetch product images: {e}")
 
 
 def is_port_in_use(port):
@@ -43,4 +60,11 @@ if __name__ == "__main__":
         port = default_port
 
     print(f"🚀 Starting Flask server on http://{host}:{port}")
+
+    # Start image fetching in background thread (non-blocking)
+    image_thread = threading.Thread(
+        target=fetch_product_images_in_background, daemon=True
+    )
+    image_thread.start()
+
     app.run(host=host, port=port, debug=True)

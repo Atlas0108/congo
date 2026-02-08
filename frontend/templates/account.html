@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+
+{% block title %}Your Account - Congo{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto">
+    <h1 class="text-2xl font-semibold mb-6">Your Account</h1>
+    
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Your Orders -->
+        <a href="/orders" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #8B4513;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Your Orders</h3>
+            <p class="text-xs text-gray-600">Track, return, cancel an order, download invoice or buy again</p>
+        </a>
+
+        <!-- Login & security -->
+        <a href="/account/security" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1976D2;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Login & security</h3>
+            <p class="text-xs text-gray-600">Edit login, name, and mobile number</p>
+        </a>
+
+        <!-- Prime / Local -->
+        <a href="/account/membership" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <span style="color: #0EAD69; font-weight: bold; font-size: 0.875rem;">local</span>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Local</h3>
+            <p class="text-xs text-gray-600">Manage your membership, view benefits, and payment settings</p>
+        </a>
+
+        <!-- Your Addresses -->
+        <a href="/account/addresses" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1976D2;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Your Addresses</h3>
+            <p class="text-xs text-gray-600">Edit, remove or set default address</p>
+        </a>
+
+        <!-- Your Payments -->
+        <a href="/account/payments" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1976D2;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Your Payments</h3>
+            <p class="text-xs text-gray-600">View all transactions, manage payment methods and settings</p>
+        </a>
+
+        <!-- Gift cards -->
+        <a href="/account/gift-cards" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1976D2;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Gift cards</h3>
+            <p class="text-xs text-gray-600">View balance or redeem a card, and purchase a new Gift Card</p>
+        </a>
+
+        <!-- Your Lists -->
+        <a href="/account/lists" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1976D2;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Your Lists</h3>
+            <p class="text-xs text-gray-600">View, modify, and share your lists, or create new ones</p>
+        </a>
+
+        <!-- Customer Service -->
+        <a href="/account/customer-service" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1976D2;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 5.636l-3.536 3.536m0 5.656l3.536 3.536M9.172 9.172L5.636 5.636m3.536 9.192l-3.536 3.536M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-5 0a4 4 0 11-8 0 4 4 0 018 0z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Customer Service</h3>
+            <p class="text-xs text-gray-600">Browse self service options, help articles or contact us</p>
+        </a>
+
+        <!-- Your Messages -->
+        <a href="/account/messages" class="bg-white border border-gray-200 rounded-lg p-4 hover:shadow-md transition">
+            <div class="flex items-start mb-2">
+                <div class="w-12 h-12 rounded-full flex items-center justify-center mr-3" style="background-color: #E3F2FD;">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #1976D2;">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+            </div>
+            <h3 class="font-semibold text-sm mb-1">Your Messages</h3>
+            <p class="text-xs text-gray-600">View or respond to messages from Congo, Sellers and Buyers</p>
+        </a>
+    </div>
+</div>
+{% endblock %}
+

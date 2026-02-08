@@ -3,30 +3,41 @@
 {% block title %}Congo - Home{% endblock %}
 
 {% block content %}
-<!-- Hero Section -->
-<div style="background: linear-gradient(to right, #004FFF, #0039CC);" class="text-white py-16 mb-12 rounded-lg">
-    <div class="text-center">
-        <h1 class="text-5xl font-bold mb-4">Welcome to Congo</h1>
-        <p class="text-xl mb-8">Your one-stop shop for everything you need</p>
-        <a href="/products" class="bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition">
-            Shop Now
-        </a>
-    </div>
-</div>
+<style>
+    /* Override main container for full-width gradient */
+    main {
+        max-width: 100% !important;
+        padding: 0 !important;
+    }
+</style>
+<div style="background: linear-gradient(to bottom, #004FFF, #3B82F6, #60A5FA, #93C5FD, #DBEAFE, #F4F3EE); min-height: 100vh; width: 100%;">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Hero Section -->
+        <div class="text-white py-12 mb-12 text-center">
+            <h1 class="text-4xl md:text-5xl font-bold mb-4">Shop Local, Support Your Community</h1>
+            <p class="text-xl md:text-2xl mb-6 text-blue-100">Discover amazing products from local sellers with fast, free delivery</p>
+            <a href="/products?local=true" class="bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg hover:shadow-xl inline-flex items-center gap-1">
+                Shop <svg style="color: #ED6A5A;" class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/>
+                </svg><span style="color: #0EAD69;">local</span> Products
+            </a>
+        </div>
 
-<!-- Featured Products -->
-<div class="mb-12">
-    <h2 class="text-3xl font-bold mb-6">Featured Products</h2>
-    <div id="featured-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Products will be loaded here -->
-    </div>
-</div>
+        <!-- Featured Products -->
+        <div class="mb-12">
+            <h2 class="text-3xl font-bold mb-6">Featured Products</h2>
+            <div id="featured-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <!-- Products will be loaded here -->
+            </div>
+        </div>
 
-<!-- Categories -->
-<div class="mb-12">
-    <h2 class="text-3xl font-bold mb-6">Shop by Category</h2>
-    <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <!-- Categories will be loaded here -->
+        <!-- Categories -->
+        <div class="mb-12">
+            <h2 class="text-3xl font-bold mb-6">Shop by Category</h2>
+            <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <!-- Categories will be loaded here -->
+            </div>
+        </div>
     </div>
 </div>
 {% endblock %}
@@ -39,14 +50,56 @@
         .then(data => {
             const container = document.getElementById('featured-products');
             container.innerHTML = data.products.map(product => `
-                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition cursor-pointer" onclick="window.location.href='/product/${product.id}'">
                     <img src="${product.image_url || '/static/images/placeholder.svg'}" alt="${product.name}" class="w-full h-48 object-cover bg-gray-200" onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
                     <div class="p-4">
-                        <h3 class="font-semibold text-lg mb-2">${product.name}</h3>
-                        <p class="text-gray-600 text-sm mb-2 line-clamp-2">${product.description || ''}</p>
+                        <h3 class="font-semibold text-base mb-1.5 line-clamp-2 hover:text-blue-600 transition">${product.name}</h3>
+                        
+                        <!-- Rating -->
+                        ${product.rating > 0 ? `
+                            <div class="mb-1 flex items-center gap-0.5">
+                                <span class="text-blue-600 text-sm font-medium">${product.rating.toFixed(1)}</span>
+                                <div class="flex items-center">
+                                    ${Array.from({length: 5}, (_, i) => {
+                                        const rating = product.rating;
+                                        if (i < Math.floor(rating)) {
+                                            return `<span class="text-orange-400 text-xs">★</span>`;
+                                        } else if (i === Math.floor(rating) && rating % 1 >= 0.5) {
+                                            return `<span class="text-orange-400 text-xs">★</span>`;
+                                        } else {
+                                            return `<span class="text-gray-300 text-xs">★</span>`;
+                                        }
+                                    }).join('')}
+                                </div>
+                                <span class="text-blue-600 text-xs ml-0.5">
+                                    (${product.review_count >= 1000 ? (product.review_count / 1000).toFixed(1) + 'K' : product.review_count})
+                                </span>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Price -->
+                        <div class="mb-1">
+                            <span class="text-xl font-bold text-gray-900">
+                                $${product.price.toFixed(2).split('.')[0]}<sup class="text-sm font-normal">${product.price.toFixed(2).split('.')[1]}</sup>
+                            </span>
+                        </div>
+                        
+                        <!-- Delivery Info -->
+                        ${product.shipping_time ? `
+                            <div class="mb-1.5 flex items-center gap-1 text-xs">
+                                ${product.id % 2 === 0 ? '<svg style="color: #ED6A5A;" class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd"/></svg>' : ''}
+                                <span style="color: #0EAD69;">${product.id % 2 === 0 ? 'local' : 'USA'}</span>
+                                <span class="text-gray-700">${product.shipping_time}</span>
+                            </div>
+                            <div class="mb-2 text-xs text-gray-700">
+                                FREE delivery ${product.shipping_time}
+                            </div>
+                        ` : ''}
+                        
+                        <p class="text-gray-600 text-xs mb-3 line-clamp-2">${product.description || ''}</p>
+                        
                         <div class="flex items-center justify-between">
-                            <span class="text-2xl font-bold text-gray-900">$${product.price.toFixed(2)}</span>
-                            <button onclick="addToCart(${product.id})" style="background-color: #004FFF;" class="text-white px-4 py-2 rounded hover:opacity-90">
+                            <button onclick="event.stopPropagation(); addToCart(${product.id})" data-product-id="${product.id}" class="btn-primary btn-primary-md">
                                 Add to Cart
                             </button>
                         </div>

@@ -28,7 +28,9 @@ def setup_database():
                     category="Electronics",
                     image_url="https://via.placeholder.com/300",
                     rating=4.5,
-                    review_count=120
+                    review_count=120,
+                    shipping_time="7-15 days",
+                    shipping_cost=0.00
                 ),
                 Product(
                     name="Wireless Headphones",
@@ -38,7 +40,9 @@ def setup_database():
                     category="Electronics",
                     image_url="https://via.placeholder.com/300",
                     rating=4.7,
-                    review_count=89
+                    review_count=89,
+                    shipping_time="5-10 days",
+                    shipping_cost=0.00
                 ),
                 Product(
                     name="Smart Coffee Maker",
@@ -48,7 +52,9 @@ def setup_database():
                     category="Home & Kitchen",
                     image_url="https://via.placeholder.com/300",
                     rating=4.3,
-                    review_count=45
+                    review_count=45,
+                    shipping_time="10-20 days",
+                    shipping_cost=5.99
                 ),
                 Product(
                     name="Running Shoes",
@@ -58,7 +64,9 @@ def setup_database():
                     category="Sports & Outdoors",
                     image_url="https://via.placeholder.com/300",
                     rating=4.6,
-                    review_count=156
+                    review_count=156,
+                    shipping_time="7-15 days",
+                    shipping_cost=0.00
                 ),
                 Product(
                     name="Backpack",
@@ -68,7 +76,9 @@ def setup_database():
                     category="Fashion",
                     image_url="https://via.placeholder.com/300",
                     rating=4.4,
-                    review_count=78
+                    review_count=78,
+                    shipping_time="10-20 days",
+                    shipping_cost=3.99
                 ),
                 Product(
                     name="Smart Watch",
@@ -78,7 +88,57 @@ def setup_database():
                     category="Electronics",
                     image_url="https://via.placeholder.com/300",
                     rating=4.5,
-                    review_count=203
+                    review_count=203,
+                    shipping_time="7-15 days",
+                    shipping_cost=0.00
+                ),
+                Product(
+                    name="Wireless Mouse",
+                    description="Ergonomic wireless mouse with precision tracking and long battery life. Compatible with all devices.",
+                    price=29.99,
+                    stock=100,
+                    category="Electronics",
+                    image_url="https://via.placeholder.com/300",
+                    rating=4.6,
+                    review_count=234,
+                    shipping_time="5-10 days",
+                    shipping_cost=0.00
+                ),
+                Product(
+                    name="Desk Lamp",
+                    description="LED desk lamp with adjustable brightness and color temperature. Perfect for home office.",
+                    price=39.99,
+                    stock=45,
+                    category="Home & Kitchen",
+                    image_url="https://via.placeholder.com/300",
+                    rating=4.4,
+                    review_count=67,
+                    shipping_time="10-20 days",
+                    shipping_cost=4.99
+                ),
+                Product(
+                    name="Yoga Mat",
+                    description="Non-slip yoga mat with extra cushioning. Ideal for yoga, pilates, and exercise routines.",
+                    price=24.99,
+                    stock=80,
+                    category="Sports & Outdoors",
+                    image_url="https://via.placeholder.com/300",
+                    rating=4.5,
+                    review_count=145,
+                    shipping_time="7-15 days",
+                    shipping_cost=0.00
+                ),
+                Product(
+                    name="Water Bottle",
+                    description="Insulated stainless steel water bottle keeps drinks cold for 24 hours or hot for 12 hours.",
+                    price=19.99,
+                    stock=120,
+                    category="Sports & Outdoors",
+                    image_url="https://via.placeholder.com/300",
+                    rating=4.7,
+                    review_count=189,
+                    shipping_time="5-10 days",
+                    shipping_cost=0.00
                 ),
             ]
             

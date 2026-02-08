@@ -1,52 +1,157 @@
 {% extends "base.html" %}
 
-{% block title %}Login - Congo{% endblock %}
+{% block title %}Sign In - Congo{% endblock %}
+
+{% block header %}{% endblock %}
+
+{% block footer %}{% endblock %}
 
 {% block content %}
-<div class="max-w-md mx-auto bg-white rounded-lg shadow-md p-8 mt-8">
-    <h2 class="text-3xl font-bold mb-6 text-center">Sign In</h2>
-    <form id="login-form" class="space-y-4">
-        <div>
-            <label for="username" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
-            <input type="text" id="username" name="username" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
+<div class="max-w-md mx-auto">
+    <div class="bg-white border border-gray-300 rounded-lg p-6 mt-4">
+        <h1 class="text-2xl font-semibold mb-4">Sign in</h1>
+        
+        <form id="login-form" class="space-y-4">
+            <!-- Email or mobile phone number -->
+            <div>
+                <label for="identifier" class="block text-sm font-medium text-gray-700 mb-1">Email or mobile phone number</label>
+                <input 
+                    type="text" 
+                    id="identifier" 
+                    name="identifier" 
+                    required 
+                    class="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                >
+                <p id="identifier-error" class="text-red-600 text-xs mt-1 hidden"></p>
+            </div>
+
+            <!-- Password -->
+            <div>
+                <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                <div class="relative">
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required 
+                        class="w-full px-3 py-2 border border-gray-400 rounded focus:outline-none focus:border-yellow-500 focus:ring-1 focus:ring-yellow-500"
+                    >
+                    <button 
+                        type="button" 
+                        id="toggle-password" 
+                        class="absolute right-3 top-2.5 text-sm text-blue-600 hover:underline"
+                    >
+                        Show
+                    </button>
+                </div>
+                <p id="password-error" class="text-red-600 text-xs mt-1 hidden"></p>
+            </div>
+
+            <!-- Keep me signed in -->
+            <div class="flex items-start">
+                <input 
+                    type="checkbox" 
+                    id="keep_signed_in" 
+                    name="keep_signed_in" 
+                    class="mt-1 mr-2"
+                >
+                <label for="keep_signed_in" class="text-sm text-gray-700">
+                    Keep me signed in. 
+                    <a href="#" class="text-blue-600 hover:underline">Details</a>
+                </label>
+            </div>
+
+            <!-- Submit button -->
+            <button type="submit" class="btn-primary btn-primary-full btn-primary-md w-full">
+                Sign in
+            </button>
+        </form>
+
+        <!-- Forgot password link -->
+        <div class="mt-4">
+            <a href="#" class="text-sm text-blue-600 hover:underline">Forgot your password?</a>
         </div>
-        <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <input type="password" id="password" name="password" required class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
+
+        <!-- Divider -->
+        <div class="relative my-6">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gray-300"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+                <span class="px-2 bg-white text-gray-500">New to Congo?</span>
+            </div>
         </div>
-        <button type="submit" style="background-color: #004FFF;" class="w-full text-white py-2 rounded-lg font-semibold hover:opacity-90 transition">
-            Sign In
-        </button>
-    </form>
-    <p class="mt-4 text-center text-sm">
-        Don't have an account? <a href="/register" style="color: #004FFF;" class="hover:opacity-80">Sign up</a>
-    </p>
+
+        <!-- Create account link -->
+        <div class="text-center">
+            <a href="/register" class="btn-secondary btn-secondary-full btn-secondary-md inline-block text-center">
+                Create your Congo account
+            </a>
+        </div>
+    </div>
 </div>
 {% endblock %}
 
 {% block scripts %}
 <script>
-    document.getElementById('login-form').addEventListener('submit', async (e) => {
+    const form = document.getElementById('login-form');
+    const passwordInput = document.getElementById('password');
+    const togglePasswordBtn = document.getElementById('toggle-password');
+
+    // Toggle password visibility
+    let passwordVisible = false;
+    togglePasswordBtn.addEventListener('click', () => {
+        passwordVisible = !passwordVisible;
+        passwordInput.type = passwordVisible ? 'text' : 'password';
+        togglePasswordBtn.textContent = passwordVisible ? 'Hide' : 'Show';
+    });
+
+    // Form submission
+    form.addEventListener('submit', async (e) => {
         e.preventDefault();
-        const formData = new FormData(e.target);
-        const data = {
-            username: formData.get('username'),
-            password: formData.get('password')
-        };
         
-        const response = await fetch('/api/users/login', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(data)
+        // Clear previous errors
+        document.querySelectorAll('[id$="-error"]').forEach(el => {
+            el.classList.add('hidden');
+            el.textContent = '';
         });
         
-        const result = await response.json();
-        if (response.ok) {
-            window.location.href = '/';
+        const formData = new FormData(form);
+        const identifier = formData.get('identifier');
+        const password = formData.get('password');
+        
+        // Determine if identifier is email, phone, or username
+        let data = { password: password };
+        if (identifier.includes('@')) {
+            data.email = identifier;
+        } else if (/^\d+$/.test(identifier.replace(/\D/g, ''))) {
+            data.phone = identifier;
         } else {
-            alert(result.error || 'Login failed');
+            data.username = identifier;
+        }
+        
+        try {
+            const response = await fetch('/api/users/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data)
+            });
+            
+            const result = await response.json();
+            if (response.ok) {
+                window.location.href = '/';
+            } else {
+                const errorEl = document.getElementById('password-error');
+                errorEl.textContent = result.error || 'Invalid credentials';
+                errorEl.classList.remove('hidden');
+                passwordInput.classList.add('border-red-500');
+            }
+        } catch (error) {
+            const errorEl = document.getElementById('password-error');
+            errorEl.textContent = 'An error occurred. Please try again.';
+            errorEl.classList.remove('hidden');
         }
     });
 </script>

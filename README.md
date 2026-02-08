@@ -93,7 +93,17 @@ The startup script will automatically:
    - `DATABASE_URL`: Your PostgreSQL connection string
    - `SECRET_KEY`: A random secret key for Flask sessions
 
-6. **Initialize the database with sample data** (optional):
+6. **Populate products from AliExpress** (optional):
+   ```bash
+   # Using mock data (for testing)
+   python populate_aliexpress.py --count 100
+   
+   # Using real AliExpress API (requires API key)
+   python populate_aliexpress.py --api-key YOUR_API_KEY --count 100
+   ```
+   This will fetch and add products to your database. Without an API key, it uses mock data for testing.
+
+7. **Initialize the database with sample data** (alternative):
    ```bash
    python setup_db.py
    ```

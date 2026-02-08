@@ -41,14 +41,115 @@ body {
     background: #555;
 }
 
-/* Custom button styles */
+/* Button Classes */
 .btn-primary {
-    background-color: var(--accent-color);
+    background-color: #004FFF;
     color: white;
+    border: none;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
 }
 
 .btn-primary:hover {
-    background-color: #0039CC;
+    opacity: 0.9;
+}
+
+.btn-primary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-primary-sm {
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary-md {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-primary-lg {
+    padding: 0.75rem 2rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.btn-primary-full {
+    width: 100%;
+}
+
+.btn-success {
+    background-color: #0EAD69;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-success:hover {
+    opacity: 0.9;
+}
+
+.btn-success:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary {
+    background-color: white;
+    color: #374151;
+    border: 1px solid #D1D5DB;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-secondary:hover {
+    background-color: #F9FAFB;
+}
+
+.btn-secondary:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-secondary-sm {
+    padding: 0.375rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-secondary-md {
+    padding: 0.5rem 1rem;
+    font-size: 0.875rem;
+}
+
+.btn-secondary-full {
+    width: 100%;
+}
+
+.btn-accent {
+    background-color: #ED6A5A;
+    color: white;
+    border: none;
+    border-radius: 0.25rem;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+    cursor: pointer;
+}
+
+.btn-accent:hover {
+    opacity: 0.9;
+}
+
+.btn-accent:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
 }
 
 /* Focus ring color */
@@ -75,4 +176,3 @@ textarea:focus {
 .group:hover .group-hover\:opacity-100 {
     opacity: 1;
 }
-

@@ -34,7 +34,7 @@ def create_app():
     app.register_blueprint(cart.bp)
     
     # Register frontend routes
-    from flask import render_template
+    from flask import render_template, jsonify
     
     @app.route('/')
     def index():
@@ -64,9 +64,31 @@ def create_app():
     def orders_page():
         return render_template('orders.html')
     
+    @app.route('/account')
+    def account_page():
+        return render_template('account.html')
+    
+    @app.route('/account/addresses')
+    def addresses_page():
+        return render_template('addresses.html')
+    
+    @app.route('/account/addresses/new')
+    def add_address_page():
+        return render_template('add_address.html')
+    
     # Create tables
     with app.app_context():
         db.create_all()
+    
+    # Register error handlers to return JSON instead of HTML
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({'error': 'Not found'}), 404
+    
+    @app.errorhandler(500)
+    def internal_error(error):
+        db.session.rollback()
+        return jsonify({'error': 'Internal server error'}), 500
     
     return app
 

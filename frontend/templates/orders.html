@@ -3,7 +3,7 @@
 {% block title %}My Orders - Congo{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">My Orders</h1>
+<h1 class="text-2xl font-semibold mb-4">Your Orders</h1>
 <div id="orders-container">
     <div class="bg-white rounded-lg shadow-md p-6">
         <p class="text-center text-gray-500">Loading orders...</p>
@@ -13,6 +13,29 @@
 
 {% block scripts %}
 <script>
+    function formatDate(dateString) {
+        const date = new Date(dateString);
+        const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+    }
+
+    function getStatusDisplay(status, createdDate) {
+        const statusMap = {
+            'pending': { text: 'Processing', color: 'text-gray-700' },
+            'processing': { text: 'Processing', color: 'text-gray-700' },
+            'shipped': { text: 'Arriving soon', color: 'text-green-600' },
+            'delivered': { text: 'Delivered', color: 'text-black font-bold' },
+            'cancelled': { text: 'Cancelled', color: 'text-red-600' }
+        };
+        return statusMap[status] || { text: status, color: 'text-gray-700' };
+    }
+
+    function getShippingName(address) {
+        // Extract name from address if it's in the format "Name\nAddress"
+        const lines = address.split('\n');
+        return lines[0] || 'You';
+    }
+
     fetch('/api/orders/')
         .then(response => {
             if (response.ok) {
@@ -25,34 +48,105 @@
             if (orders.length === 0) {
                 container.innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">You have no orders yet.</p></div>';
             } else {
-                container.innerHTML = orders.map(order => `
-                    <div class="bg-white rounded-lg shadow-md p-6 mb-4">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h3 class="text-xl font-semibold">Order #${order.id}</h3>
-                                <p class="text-gray-600">Placed on ${new Date(order.created_at).toLocaleDateString()}</p>
+                container.innerHTML = orders.map(order => {
+                    const orderDate = formatDate(order.created_at);
+                    const statusDisplay = getStatusDisplay(order.status, order.created_at);
+                    const shippingName = getShippingName(order.shipping_address);
+                    
+                    return order.items.map(item => {
+                        const itemStatus = getStatusDisplay(order.status, order.created_at);
+                        return `
+                            <div class="bg-white border border-gray-200 rounded-lg p-4 mb-4 shadow-sm">
+                                <!-- Order Header -->
+                                <div class="grid grid-cols-4 gap-4 pb-4 border-b border-gray-200 mb-4">
+                                    <div>
+                                        <div class="text-xs text-gray-500 mb-1">ORDER PLACED</div>
+                                        <div class="text-sm font-medium">${orderDate}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-500 mb-1">TOTAL</div>
+                                        <div class="text-sm font-medium">$${order.total_amount.toFixed(2)}</div>
+                                    </div>
+                                    <div>
+                                        <div class="text-xs text-gray-500 mb-1">SHIP TO</div>
+                                        <div class="text-sm font-medium flex items-center">
+                                            ${shippingName}
+                                            <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <div class="text-right">
+                                        <div class="text-xs text-gray-500 mb-1">ORDER # ${order.id}</div>
+                                        <div class="text-sm">
+                                            <a href="/orders/${order.id}" class="text-blue-600 hover:underline">View order details</a>
+                                        </div>
+                                        <div class="text-sm">
+                                            <a href="/orders/${order.id}/invoice" class="text-blue-600 hover:underline">View invoice</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Product Item -->
+                                <div class="flex gap-4">
+                                    <!-- Product Image and Info -->
+                                    <div class="flex-1 flex gap-4">
+                                        <div class="flex-shrink-0">
+                                            <img src="${item.product.image_url || '/static/images/placeholder.svg'}" 
+                                                 alt="${item.product.name}" 
+                                                 class="w-24 h-24 object-cover rounded"
+                                                 onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
+                                        </div>
+                                        <div class="flex-1">
+                                            <div class="mb-2">
+                                                <span class="${itemStatus.color} font-semibold text-lg">${itemStatus.text}</span>
+                                                ${order.status === 'delivered' ? '<div class="text-sm text-gray-600 mt-1">Your package was left near the front door or porch.</div>' : ''}
+                                            </div>
+                                            <h3 class="text-sm font-medium text-gray-900 mb-2">${item.product.name}</h3>
+                                            ${item.quantity > 1 ? `<div class="text-xs text-gray-500 mb-2">Quantity: ${item.quantity}</div>` : ''}
+                                            ${order.status === 'delivered' ? `<div class="text-xs text-gray-600 mb-2">Return or replace items: Eligible through ${new Date(new Date(order.created_at).getTime() + 30*24*60*60*1000).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</div>` : ''}
+                                            <div class="flex gap-2 mt-3">
+                                                <button class="btn-secondary btn-secondary-sm flex items-center gap-1">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"></path>
+                                                    </svg>
+                                                    Buy it again
+                                                </button>
+                                                ${order.status === 'delivered' ? '<button class="btn-secondary btn-secondary-sm">View your item</button>' : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Action Buttons Column -->
+                                    <div class="w-48 flex-shrink-0 space-y-2">
+                                        ${order.status !== 'delivered' ? `
+                                            <button class="btn-secondary btn-secondary-full btn-secondary-sm text-left">
+                                                Track package
+                                            </button>
+                                        ` : ''}
+                                        <button class="btn-secondary btn-secondary-full btn-secondary-sm text-left">
+                                            Get product support
+                                        </button>
+                                        <button class="btn-secondary btn-secondary-full btn-secondary-sm text-left">
+                                            Return or replace items
+                                        </button>
+                                        <button class="btn-secondary btn-secondary-full btn-secondary-sm text-left">
+                                            Ask Product Question
+                                        </button>
+                                        <button class="btn-secondary btn-secondary-full btn-secondary-sm text-left">
+                                            Write a product review
+                                        </button>
+                                        ${order.status === 'delivered' ? `
+                                            <button class="btn-secondary btn-secondary-full btn-secondary-sm text-left">
+                                                Leave seller feedback
+                                            </button>
+                                        ` : ''}
+                                    </div>
+                                </div>
                             </div>
-                            <div class="text-right">
-                                <p class="text-2xl font-bold text-gray-900">$${order.total_amount.toFixed(2)}</p>
-                                <span class="px-3 py-1 rounded-full text-sm" style="background-color: #004FFF; color: white;">${order.status}</span>
-                            </div>
-                        </div>
-                        <div class="border-t pt-4">
-                            <h4 class="font-semibold mb-2">Items:</h4>
-                            <ul class="space-y-2">
-                                ${order.items.map(item => `
-                                    <li class="flex justify-between">
-                                        <span>${item.product.name} x ${item.quantity}</span>
-                                        <span>$${(item.price * item.quantity).toFixed(2)}</span>
-                                    </li>
-                                `).join('')}
-                            </ul>
-                        </div>
-                        <div class="mt-4 pt-4 border-t">
-                            <p class="text-sm text-gray-600"><strong>Shipping to:</strong> ${order.shipping_address}</p>
-                        </div>
-                    </div>
-                `).join('');
+                        `;
+                    }).join('');
+                }).join('');
             }
         })
         .catch(() => {

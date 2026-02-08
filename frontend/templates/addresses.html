@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Your Addresses - Congo{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-6">
+    <!-- Breadcrumb -->
+    <div class="mb-2">
+        <a href="/account" class="text-blue-600 hover:underline text-sm">Your Account</a>
+        <span class="text-gray-500 text-sm mx-1">></span>
+        <span class="text-gray-700 text-sm">Your Addresses</span>
+    </div>
+    
+    <h1 class="text-2xl font-semibold mb-6">Your Addresses</h1>
+    
+    <div id="addresses-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <!-- Loading state -->
+        <div class="col-span-full">
+            <p class="text-center text-gray-500">Loading addresses...</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    function loadAddresses() {
+        fetch('/api/users/addresses')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                throw new Error('Not authenticated');
+            })
+            .then(addresses => {
+                const container = document.getElementById('addresses-container');
+                
+                // Add Address Card (always first)
+                let html = `
+                    <a href="/account/addresses/new" class="bg-white border-2 border-dashed border-gray-300 rounded-lg p-6 flex flex-col items-center justify-center min-h-[200px] hover:border-gray-400 cursor-pointer transition-colors">
+                        <svg class="w-16 h-16 text-gray-400 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        <span class="text-lg font-bold text-gray-600">Add Address</span>
+                    </a>
+                `;
+                
+                // Add existing addresses
+                addresses.forEach(address => {
+                    const isDefault = address.is_default || false;
+                    
+                    // Format address to match image layout
+                    let formattedAddress = '';
+                    if (address.address_line1) {
+                        formattedAddress = address.address_line1;
+                        if (address.address_line2) {
+                            formattedAddress += ', ' + address.address_line2;
+                        }
+                        if (address.city || address.state || address.postal_code) {
+                            formattedAddress += ', ';
+                            if (address.city) formattedAddress += address.city;
+                            if (address.state) {
+                                if (address.city) formattedAddress += ', ';
+                                formattedAddress += address.state;
+                            }
+                            if (address.postal_code) {
+                                formattedAddress += ' ' + address.postal_code;
+                            }
+                        }
+                        if (address.country) {
+                            formattedAddress += ', ' + address.country;
+                        }
+                    }
+                    
+                    html += `
+                        <div class="bg-white border border-gray-200 rounded-lg p-4">
+                            ${isDefault ? `
+                                <div class="mb-2 text-xs font-medium text-gray-700">
+                                    Default
+                                </div>
+                            ` : ''}
+                            <div class="mb-3">
+                                <div class="font-semibold text-base mb-1">${address.name || 'No name'}</div>
+                                <div class="text-sm text-gray-700 mb-1">
+                                    ${formattedAddress || 'No address'}
+                                </div>
+                                ${address.phone ? `
+                                    <div class="text-sm text-gray-700 mt-1">${address.phone}</div>
+                                ` : ''}
+                            </div>
+                            ${address.phone ? `
+                                <div class="mb-2">
+                                    <a href="#" onclick="addDeliveryInstructions(${address.id}); return false;" class="text-blue-600 hover:underline text-sm">
+                                        Add delivery instructions
+                                    </a>
+                                </div>
+                            ` : ''}
+                            <div class="flex items-center gap-2 text-sm">
+                                <a href="#" onclick="editAddress(${address.id}); return false;" class="text-blue-600 hover:underline">Edit</a>
+                                <span class="text-gray-400">|</span>
+                                <a href="#" onclick="removeAddress(${address.id}); return false;" class="text-blue-600 hover:underline">Remove</a>
+                                ${!isDefault ? `
+                                    <span class="text-gray-400">|</span>
+                                    <a href="#" onclick="setDefaultAddress(${address.id}); return false;" class="text-blue-600 hover:underline">Set as Default</a>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            })
+            .catch(() => {
+                document.getElementById('addresses-container').innerHTML = `
+                    <div class="col-span-full">
+                        <p class="text-center text-gray-500">Please <a href="/login" class="text-blue-600 hover:underline">login</a> to view your addresses.</p>
+                    </div>
+                `;
+            });
+    }
+    
+    function editAddress(addressId) {
+        // TODO: Implement edit address
+        alert('Edit address functionality coming soon!');
+    }
+    
+    function removeAddress(addressId) {
+        if (confirm('Are you sure you want to remove this address?')) {
+            fetch(`/api/users/addresses/${addressId}`, {
+                method: 'DELETE',
+                credentials: 'include'
+            })
+            .then(response => {
+                if (response.ok) {
+                    loadAddresses();
+                } else {
+                    alert('Failed to remove address');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to remove address');
+            });
+        }
+    }
+    
+    function setDefaultAddress(addressId) {
+        fetch(`/api/users/addresses/${addressId}/set-default`, {
+            method: 'POST',
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.ok) {
+                loadAddresses();
+            } else {
+                alert('Failed to set default address');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Failed to set default address');
+        });
+    }
+    
+    function addDeliveryInstructions(addressId) {
+        // TODO: Implement delivery instructions
+        alert('Delivery instructions functionality coming soon!');
+    }
+    
+    loadAddresses();
+</script>
+{% endblock %}

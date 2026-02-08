@@ -13,6 +13,9 @@ class Product(db.Model):
     image_url = db.Column(db.String(500))
     rating = db.Column(db.Numeric(3, 2), default=0.0)
     review_count = db.Column(db.Integer, default=0)
+    shipping_time = db.Column(db.String(50))  # e.g., "7-15 days", "15-30 days"
+    shipping_cost = db.Column(db.Numeric(10, 2), default=0.0)
+    aliexpress_id = db.Column(db.String(100))  # Store AliExpress product ID
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
@@ -31,6 +34,9 @@ class Product(db.Model):
             'image_url': self.image_url,
             'rating': float(self.rating) if self.rating else 0.0,
             'review_count': self.review_count,
+            'shipping_time': self.shipping_time,
+            'shipping_cost': float(self.shipping_cost) if self.shipping_cost else 0.0,
+            'aliexpress_id': self.aliexpress_id,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 

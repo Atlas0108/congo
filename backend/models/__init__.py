@@ -3,6 +3,7 @@ from backend.models.user import User
 from backend.models.product import Product
 from backend.models.order import Order, OrderItem
 from backend.models.cart import CartItem
+from backend.models.address import Address
 
-__all__ = ['User', 'Product', 'Order', 'OrderItem', 'CartItem']
+__all__ = ['User', 'Product', 'Order', 'OrderItem', 'CartItem', 'Address']
 

@@ -3,23 +3,36 @@
 {% block title %}Shopping Cart - Congo{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold mb-6">Shopping Cart</h1>
-<div id="cart-container">
-    <div class="bg-white rounded-lg shadow-md p-6">
+<h1 class="text-2xl font-semibold mb-4">Shopping Cart</h1>
+<div id="cart-container" class="bg-white border border-gray-200 rounded">
+    <div class="p-4">
         <p class="text-center text-gray-500">Loading cart...</p>
     </div>
 </div>
 
 <div id="checkout-section" class="hidden mt-8 bg-white rounded-lg shadow-md p-6">
     <h2 class="text-2xl font-bold mb-4">Checkout</h2>
+    <div id="guest-checkout-message" class="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg hidden">
+        <p class="text-sm text-yellow-800">
+            Please <a href="/login" class="text-blue-600 hover:underline font-semibold">sign in</a> or <a href="/register" class="text-blue-600 hover:underline font-semibold">create an account</a> to place an order.
+        </p>
+    </div>
     <form id="checkout-form" class="space-y-4">
         <div>
-            <label for="shipping_address" class="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
-            <textarea id="shipping_address" name="shipping_address" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none"></textarea>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
+            <div id="selected-address-display" class="mb-3 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                <div id="address-details" class="text-sm text-gray-700 mb-2">No address selected</div>
+                <button type="button" onclick="openAddressSelector()" class="text-blue-600 hover:underline text-sm">
+                    Change address
+                </button>
+            </div>
+            
+            <input type="hidden" id="shipping_address" name="shipping_address" required>
+            <input type="hidden" id="selected_address_id" name="selected_address_id">
         </div>
         <div class="flex items-center justify-between">
             <span class="text-xl font-semibold">Total: $<span id="cart-total">0.00</span></span>
-            <button type="submit" style="background-color: #0EAD69;" class="text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition">
+            <button type="submit" class="btn-success btn-primary-lg">
                 Place Order
             </button>
         </div>
@@ -35,48 +48,141 @@
                 if (response.ok) {
                     return response.json();
                 }
-                throw new Error('Not authenticated');
+                return [];
             })
             .then(cart => {
                 const container = document.getElementById('cart-container');
                 const checkoutSection = document.getElementById('checkout-section');
                 
                 if (cart.length === 0) {
-                    container.innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Your cart is empty.</p></div>';
+                    container.innerHTML = '<div class="p-6"><p class="text-center text-gray-500">Your cart is empty.</p></div>';
                     checkoutSection.classList.add('hidden');
                 } else {
+                    container.className = 'bg-white border border-gray-200 rounded';
                     let total = 0;
-                    container.innerHTML = cart.map(item => {
+                    const itemsHtml = cart.map(item => {
                         const itemTotal = item.product.price * item.quantity;
                         total += itemTotal;
+                        const inStock = item.product.stock > 0;
+                        const stockStatus = inStock ? 'In Stock' : 'Out of Stock';
+                        const stockColor = inStock ? 'text-green-600' : 'text-red-600';
+                        
                         return `
-                            <div class="bg-white rounded-lg shadow-md p-6 mb-4 flex items-center justify-between">
-                                <div class="flex items-center space-x-4">
-                                    <img src="${item.product.image_url || '/static/images/placeholder.svg'}" alt="${item.product.name}" class="w-24 h-24 object-cover rounded bg-gray-200" onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
-                                    <div>
-                                        <h3 class="font-semibold text-lg">${item.product.name}</h3>
-                                        <p class="text-gray-600">$${item.product.price.toFixed(2)}</p>
+                            <div class="bg-white border-b border-gray-200 py-4">
+                                <div class="flex gap-4">
+                                    <!-- Product Image -->
+                                    <div class="flex-shrink-0">
+                                        <img src="${item.product.image_url || '/static/images/placeholder.svg'}" 
+                                             alt="${item.product.name}" 
+                                             class="w-32 h-32 object-contain bg-gray-50 rounded"
+                                             onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
                                     </div>
-                                </div>
-                                <div class="flex items-center space-x-4">
-                                    <div class="flex items-center space-x-2">
-                                        <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" class="px-3 py-1 border rounded">-</button>
-                                        <span>${item.quantity}</span>
-                                        <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" class="px-3 py-1 border rounded">+</button>
+                                    
+                                    <!-- Product Details -->
+                                    <div class="flex-1">
+                                        <!-- Product Title -->
+                                        <h3 class="text-base font-medium text-gray-900 mb-1">
+                                            <a href="/product/${item.product.id}" class="hover:text-blue-600 hover:underline">
+                                                ${item.product.name}
+                                            </a>
+                                        </h3>
+                                        
+                                        <!-- Price -->
+                                        <div class="mb-2">
+                                            <span class="text-lg font-semibold text-gray-900">$${item.product.price.toFixed(2)}</span>
+                                        </div>
+                                        
+                                        <!-- Stock Status -->
+                                        <div class="mb-2">
+                                            <span class="${stockColor} text-sm font-medium">${stockStatus}</span>
+                                        </div>
+                                        
+                                        <!-- Returns Policy -->
+                                        <div class="mb-2">
+                                            <span class="text-sm text-blue-600">FREE Returns</span>
+                                        </div>
+                                        
+                                        <!-- Product Specifications -->
+                                        ${item.product.category ? `
+                                            <div class="mb-2 text-sm text-gray-600">
+                                                <span class="font-medium">Category:</span> ${item.product.category}
+                                            </div>
+                                        ` : ''}
+                                        
+                                        <!-- Quantity Selector and Actions -->
+                                        <div class="flex items-center gap-4 mt-3">
+                                            <!-- Quantity Selector -->
+                                            <div class="flex items-center border border-gray-300 rounded">
+                                                <button onclick="updateQuantity(${item.id}, ${item.quantity - 1})" 
+                                                        class="px-3 py-1 hover:bg-gray-100 flex items-center justify-center">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                                    </svg>
+                                                </button>
+                                                <span class="px-4 py-1 border-x border-gray-300 text-center min-w-[3rem]">${item.quantity}</span>
+                                                <button onclick="updateQuantity(${item.id}, ${item.quantity + 1})" 
+                                                        class="px-3 py-1 hover:bg-gray-100 flex items-center justify-center">
+                                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                                                    </svg>
+                                                </button>
+                                            </div>
+                                            
+                                            <!-- Action Links -->
+                                            <div class="flex items-center gap-4 text-sm">
+                                                <button onclick="removeFromCart(${item.id})" class="text-blue-600 hover:underline">
+                                                    Delete
+                                                </button>
+                                                <button onclick="saveForLater(${item.id})" class="text-blue-600 hover:underline">
+                                                    Save for later
+                                                </button>
+                                                <button onclick="compareItem(${item.id})" class="text-blue-600 hover:underline">
+                                                    Compare with similar items
+                                                </button>
+                                                <button onclick="shareItem(${item.id})" class="text-blue-600 hover:underline">
+                                                    Share
+                                                </button>
+                                            </div>
+                                        </div>
                                     </div>
-                                    <span class="text-xl font-semibold">$${itemTotal.toFixed(2)}</span>
-                                    <button onclick="removeFromCart(${item.id})" class="text-red-600 hover:text-red-700">Remove</button>
+                                    
+                                    <!-- Price Column (Right Side) -->
+                                    <div class="flex-shrink-0 text-right">
+                                        <div class="text-lg font-semibold text-gray-900">
+                                            $${itemTotal.toFixed(2)}
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
                         `;
                     }).join('');
+                    container.innerHTML = itemsHtml;
                     
                     document.getElementById('cart-total').textContent = total.toFixed(2);
                     checkoutSection.classList.remove('hidden');
+                    
+                    // Check if user is logged in and load default address
+                    fetch('/api/users/me')
+                        .then(response => {
+                            const guestMessage = document.getElementById('guest-checkout-message');
+                            if (!response.ok) {
+                                if (guestMessage) guestMessage.classList.remove('hidden');
+                            } else {
+                                if (guestMessage) guestMessage.classList.add('hidden');
+                                // Load default address
+                                loadDefaultAddress();
+                            }
+                        })
+                        .catch(() => {
+                            const guestMessage = document.getElementById('guest-checkout-message');
+                            if (guestMessage) guestMessage.classList.remove('hidden');
+                        });
                 }
             })
             .catch(() => {
-                document.getElementById('cart-container').innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Please <a href="/login" style="color: #004FFF;" class="hover:opacity-80">login</a> to view your cart.</p></div>';
+                const container = document.getElementById('cart-container');
+                container.className = 'bg-white border border-gray-200 rounded';
+                container.innerHTML = '<div class="p-6"><p class="text-center text-gray-500">Error loading cart. Please try again.</p></div>';
             });
     }
     
@@ -96,17 +202,126 @@
     }
     
     function removeFromCart(itemId) {
-        fetch(`/api/cart/${itemId}`, {
-            method: 'DELETE'
-        })
-        .then(() => {
-            loadCart();
-            updateCartCount();
-        });
+        if (confirm('Are you sure you want to remove this item from your cart?')) {
+            fetch(`/api/cart/${itemId}`, {
+                method: 'DELETE'
+            })
+            .then(() => {
+                loadCart();
+                updateCartCount();
+            });
+        }
+    }
+    
+    function saveForLater(itemId) {
+        // TODO: Implement save for later functionality
+        alert('Save for later feature coming soon!');
+    }
+    
+    function compareItem(itemId) {
+        // TODO: Implement compare functionality
+        alert('Compare feature coming soon!');
+    }
+    
+    function shareItem(itemId) {
+        // TODO: Implement share functionality
+        if (navigator.share) {
+            fetch(`/api/cart/`)
+                .then(response => response.json())
+                .then(cart => {
+                    const item = cart.find(i => i.id === itemId);
+                    if (item) {
+                        navigator.share({
+                            title: item.product.name,
+                            text: `Check out ${item.product.name} on Congo!`,
+                            url: `${window.location.origin}/product/${item.product.id}`
+                        });
+                    }
+                });
+        } else {
+            // Fallback: copy to clipboard
+            fetch(`/api/cart/`)
+                .then(response => response.json())
+                .then(cart => {
+                    const item = cart.find(i => i.id === itemId);
+                    if (item) {
+                        const url = `${window.location.origin}/product/${item.product.id}`;
+                        navigator.clipboard.writeText(url);
+                        alert('Product link copied to clipboard!');
+                    }
+                });
+        }
+    }
+    
+    function loadDefaultAddress() {
+        fetch('/api/users/addresses')
+            .then(response => {
+                if (response.ok) {
+                    return response.json();
+                }
+                return [];
+            })
+            .then(addresses => {
+                window.savedAddresses = addresses;
+                
+                if (addresses.length === 0) {
+                    const addressDetails = document.getElementById('address-details');
+                    if (addressDetails) {
+                        addressDetails.textContent = 'No addresses saved. Add an address to continue.';
+                    }
+                } else {
+                    // Find and select default address
+                    const defaultAddress = addresses.find(addr => addr.is_default) || addresses[0];
+                    if (defaultAddress) {
+                        window.selectedAddressId = defaultAddress.id;
+                        displayAddress(defaultAddress);
+                    }
+                }
+            })
+            .catch(() => {
+                // Silently fail if addresses can't be loaded
+            });
+    }
+    
+    function displayAddress(address) {
+        const addressDetails = document.getElementById('address-details');
+        
+        // Format address for display
+        let addressHtml = `<div class="font-semibold mb-1">${address.name}</div>`;
+        const addressParts = [];
+        if (address.address_line1) addressParts.push(address.address_line1);
+        if (address.address_line2) addressParts.push(address.address_line2);
+        if (address.city) {
+            let cityLine = address.city;
+            if (address.state) cityLine += ', ' + address.state;
+            if (address.postal_code) cityLine += ', ' + address.postal_code;
+            addressParts.push(cityLine);
+        }
+        if (address.country) addressParts.push(address.country);
+        addressHtml += `<div>${addressParts.join(', ')}</div>`;
+        if (address.phone) {
+            addressHtml += `<div class="mt-1">${address.phone}</div>`;
+        }
+        
+        addressDetails.innerHTML = addressHtml;
+        
+        // Format address for submission
+        const formattedAddress = addressParts.join('\n');
+        document.getElementById('shipping_address').value = formattedAddress;
+        document.getElementById('selected_address_id').value = address.id;
     }
     
     document.getElementById('checkout-form').addEventListener('submit', async (e) => {
         e.preventDefault();
+        
+        // Check if user is logged in
+        const authCheck = await fetch('/api/users/me');
+        if (!authCheck.ok) {
+            alert('Please sign in to place an order.');
+            window.location.href = '/login';
+            return;
+        }
+        
         const formData = new FormData(e.target);
         const response = await fetch('/api/orders/', {
             method: 'POST',

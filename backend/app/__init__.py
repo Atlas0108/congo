@@ -84,6 +84,14 @@ def create_app():
     def security_page():
         return render_template('security.html')
     
+    @app.route('/about/local')
+    def about_local_page():
+        return render_template('about_local.html')
+    
+    @app.route('/merchant')
+    def merchant_profile_page():
+        return render_template('merchant_profile.html')
+    
     @app.route('/added-to-cart')
     def added_to_cart_page():
         return render_template('added_to_cart.html')
@@ -91,6 +99,41 @@ def create_app():
     # Create tables
     with app.app_context():
         db.create_all()
+        
+        # Add new columns/tables for merchant system if they don't exist
+        try:
+            from sqlalchemy import inspect, text
+            inspector = inspect(db.engine)
+            
+            # Add role column to users table if it doesn't exist
+            try:
+                user_columns = [col['name'] for col in inspector.get_columns('users')]
+                if 'role' not in user_columns:
+                    with db.engine.connect() as conn:
+                        conn.execute(text("ALTER TABLE users ADD COLUMN role VARCHAR(20) DEFAULT 'shopper'"))
+                        conn.commit()
+                    print("✓ Added role column to users table")
+            except Exception as e:
+                print(f"Note: Could not add role column (may already exist): {e}")
+            
+            # Add merchant_id column to products table if it doesn't exist
+            try:
+                product_columns = [col['name'] for col in inspector.get_columns('products')]
+                if 'merchant_id' not in product_columns:
+                    with db.engine.connect() as conn:
+                        conn.execute(text('ALTER TABLE products ADD COLUMN merchant_id INTEGER REFERENCES users(id)'))
+                        conn.commit()
+                    print("✓ Added merchant_id column to products table")
+            except Exception as e:
+                print(f"Note: Could not add merchant_id column (may already exist): {e}")
+            
+            # Create merchant_profiles table if it doesn't exist
+            if 'merchant_profiles' not in inspector.get_table_names():
+                db.create_all()
+                print("✓ Created merchant_profiles table")
+        except Exception as e:
+            # Tables might already exist
+            print(f"Note: Schema migration check completed: {e}")
     
     # Register error handlers to return JSON instead of HTML
     @app.errorhandler(404)

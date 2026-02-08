@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+
+{% block title %}About Local - Congo{% endblock %}
+
+{% block content %}
+<div class="max-w-4xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-6">Supporting Local Businesses</h1>
+    
+    <div class="bg-white rounded-lg shadow-md p-8 space-y-6">
+        <div class="prose max-w-none">
+            <h2 class="text-2xl font-semibold mb-4">How Congo Partners with Local Businesses</h2>
+            
+            <p class="text-lg text-gray-700 mb-4">
+                At Congo, we believe in the power of local commerce. Our platform is designed to connect you with amazing products from local sellers in your community, while providing them with the tools they need to thrive in the digital marketplace.
+            </p>
+            
+            <div class="space-y-6">
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Fast, Free Local Delivery</h3>
+                    <p class="text-gray-700">
+                        When you shop local on Congo, you get the convenience of online shopping with the personal touch of local businesses. Our local partners offer fast, free delivery to your area, ensuring you receive your products quickly while supporting businesses in your community.
+                    </p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Direct Support for Local Economy</h3>
+                    <p class="text-gray-700">
+                        Every purchase you make from a local seller on Congo directly supports your local economy. These businesses create jobs, invest in your community, and keep money circulating locally, strengthening the economic foundation of your area.
+                    </p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Easy Access for Local Sellers</h3>
+                    <p class="text-gray-700">
+                        Local businesses can easily join Congo's platform to reach customers in their area. We provide the technology, infrastructure, and support they need to sell online, while they focus on what they do best - creating great products and serving their community.
+                    </p>
+                </div>
+                
+                <div>
+                    <h3 class="text-xl font-semibold mb-2">Quality You Can Trust</h3>
+                    <p class="text-gray-700">
+                        All local sellers on Congo are verified businesses committed to providing quality products and excellent customer service. You can shop with confidence knowing you're supporting real businesses in your community.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="mt-8 pt-6 border-t border-gray-200">
+                <h3 class="text-xl font-semibold mb-4">Ready to Shop Local?</h3>
+                <a href="/products?local=true" class="btn-primary btn-primary-lg inline-block">
+                    Browse Local Products
+                </a>
+            </div>
+            
+            <div class="mt-6 pt-6 border-t border-gray-200">
+                <h3 class="text-xl font-semibold mb-4">Are You a Local Business?</h3>
+                <p class="text-gray-700 mb-4">
+                    Join Congo and start selling to customers in your area. We make it easy to get started and provide all the tools you need to succeed online.
+                </p>
+                <a href="/contact" class="btn-secondary btn-secondary-md inline-block">
+                    Learn More About Selling
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+

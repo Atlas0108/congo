@@ -13,6 +13,7 @@ class User(db.Model):
     last_name = db.Column(db.String(50))
     address = db.Column(db.Text)
     phone = db.Column(db.String(20))
+    role = db.Column(db.String(20), default='shopper')  # 'shopper' or 'merchant'
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     # Relationships
@@ -41,6 +42,7 @@ class User(db.Model):
             'last_name': self.last_name,
             'address': self.address,
             'phone': self.phone,
+            'role': self.role,
             'created_at': self.created_at.isoformat() if self.created_at else None
         }
 

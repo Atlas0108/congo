@@ -430,3 +430,28 @@ def set_default_payment_method(payment_method_id):
     
     return jsonify(payment_method.to_dict())
 
+# Merchant endpoints
+@bp.route('/merchants/<int:merchant_id>', methods=['GET'])
+def get_merchant(merchant_id):
+    """Get merchant profile by user ID"""
+    from backend.models.merchant import MerchantProfile
+    from backend.models.product import Product
+    
+    user = User.query.get_or_404(merchant_id)
+    if user.role != 'merchant':
+        return jsonify({'error': 'User is not a merchant'}), 404
+    
+    merchant_profile = MerchantProfile.query.filter_by(user_id=merchant_id).first()
+    if not merchant_profile:
+        return jsonify({'error': 'Merchant profile not found'}), 404
+    
+    # Get merchant's products
+    products = Product.query.filter_by(merchant_id=merchant_id).limit(20).all()
+    
+    result = merchant_profile.to_dict()
+    result['user'] = user.to_dict()
+    result['products'] = [product.to_dict() for product in products]
+    result['product_count'] = Product.query.filter_by(merchant_id=merchant_id).count()
+    
+    return jsonify(result)
+

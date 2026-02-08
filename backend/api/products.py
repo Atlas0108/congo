@@ -7,38 +7,48 @@ bp = Blueprint('products', __name__, url_prefix='/api/products')
 @bp.route('/', methods=['GET'])
 def get_products():
     """Get all products with optional filtering"""
-    category = request.args.get('category')
-    search = request.args.get('search')
-    local = request.args.get('local', '').lower() == 'true'
-    page = request.args.get('page', 1, type=int)
-    per_page = request.args.get('per_page', 20, type=int)
-    
-    query = Product.query
-    
-    if category:
-        query = query.filter(Product.category == category)
-    if search:
-        query = query.filter(Product.name.ilike(f'%{search}%'))
-    if local:
-        # Filter for local products (even product IDs)
-        query = query.filter(Product.id % 2 == 0)
-    
-    pagination = query.paginate(page=page, per_page=per_page, error_out=False)
-    products = pagination.items
-    
-    return jsonify({
-        'products': [product.to_dict() for product in products],
-        'total': pagination.total,
-        'page': page,
-        'per_page': per_page,
-        'pages': pagination.pages
-    })
+    try:
+        category = request.args.get('category')
+        search = request.args.get('search')
+        local = request.args.get('local', '').lower() == 'true'
+        page = request.args.get('page', 1, type=int)
+        per_page = request.args.get('per_page', 20, type=int)
+        
+        query = Product.query
+        
+        if category:
+            query = query.filter(Product.category == category)
+        if search:
+            query = query.filter(Product.name.ilike(f'%{search}%'))
+        if local:
+            # Filter for local products (even product IDs)
+            query = query.filter(Product.id % 2 == 0)
+        
+        pagination = query.paginate(page=page, per_page=per_page, error_out=False)
+        products = pagination.items
+        
+        return jsonify({
+            'products': [product.to_dict() for product in products],
+            'total': pagination.total,
+            'page': page,
+            'per_page': per_page,
+            'pages': pagination.pages
+        })
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e), 'products': [], 'total': 0, 'page': 1, 'per_page': 20, 'pages': 0}), 500
 
 @bp.route('/<int:product_id>', methods=['GET'])
 def get_product(product_id):
     """Get a single product by ID"""
-    product = Product.query.get_or_404(product_id)
-    return jsonify(product.to_dict())
+    try:
+        product = Product.query.get_or_404(product_id)
+        return jsonify(product.to_dict())
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/', methods=['POST'])
 def create_product():

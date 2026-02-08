@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+
+{% block title %}Merchant Profile - Congo{% endblock %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto px-4 py-8">
+    <div id="merchant-container">
+        <p class="text-center text-gray-500">Loading merchant profile...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Get merchant ID from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const merchantId = urlParams.get('id');
+    
+    if (!merchantId) {
+        document.getElementById('merchant-container').innerHTML = '<p class="text-red-500 text-center">Merchant ID is required.</p>';
+    } else {
+        fetch(`/api/users/merchants/${merchantId}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Merchant not found');
+                }
+                return response.json();
+            })
+            .then(merchant => {
+                const container = document.getElementById('merchant-container');
+                
+                const verifiedBadge = merchant.is_verified ? 
+                    '<span class="bg-green-500 text-white text-xs px-2 py-1 rounded ml-2">Verified</span>' : '';
+                
+                const ratingDisplay = merchant.rating > 0 ? `
+                    <div class="flex items-center gap-2 mb-2">
+                        <span class="text-blue-600 font-medium">${merchant.rating.toFixed(1)}</span>
+                        <div class="flex items-center">
+                            ${Array.from({length: 5}, (_, i) => {
+                                const rating = merchant.rating;
+                                if (i < Math.floor(rating)) {
+                                    return '<span class="text-orange-400 text-sm">★</span>';
+                                } else if (i === Math.floor(rating) && rating % 1 >= 0.5) {
+                                    return '<span class="text-orange-400 text-sm">★</span>';
+                                } else {
+                                    return '<span class="text-gray-300 text-sm">★</span>';
+                                }
+                            }).join('')}
+                        </div>
+                        <span class="text-blue-600 text-sm">(${merchant.review_count} reviews)</span>
+                    </div>
+                ` : '';
+                
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+                        <div class="flex items-start gap-6">
+                            ${merchant.logo_url ? `
+                                <img src="${merchant.logo_url}" alt="${merchant.business_name}" 
+                                     class="w-24 h-24 object-contain bg-gray-50 rounded-lg"
+                                     onerror="this.src='/static/images/placeholder.svg';">
+                            ` : `
+                                <div class="w-24 h-24 bg-gray-100 rounded-lg flex items-center justify-center">
+                                    <span class="text-2xl font-bold text-gray-400">${merchant.business_name.charAt(0).toUpperCase()}</span>
+                                </div>
+                            `}
+                            <div class="flex-1">
+                                <h1 class="text-3xl font-bold mb-2 flex items-center">
+                                    ${merchant.business_name}
+                                    ${verifiedBadge}
+                                </h1>
+                                ${ratingDisplay}
+                                ${merchant.description ? `<p class="text-gray-700 mb-4">${merchant.description}</p>` : ''}
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                                    ${merchant.city ? `
+                                        <div>
+                                            <span class="font-medium text-gray-600">Location:</span>
+                                            <span class="text-gray-700 ml-2">
+                                                ${merchant.city}${merchant.state ? ', ' + merchant.state : ''}${merchant.country ? ', ' + merchant.country : ''}
+                                            </span>
+                                        </div>
+                                    ` : ''}
+                                    ${merchant.phone ? `
+                                        <div>
+                                            <span class="font-medium text-gray-600">Phone:</span>
+                                            <span class="text-gray-700 ml-2">${merchant.phone}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${merchant.email ? `
+                                        <div>
+                                            <span class="font-medium text-gray-600">Email:</span>
+                                            <span class="text-gray-700 ml-2">${merchant.email}</span>
+                                        </div>
+                                    ` : ''}
+                                    ${merchant.website ? `
+                                        <div>
+                                            <span class="font-medium text-gray-600">Website:</span>
+                                            <a href="${merchant.website}" target="_blank" class="text-blue-600 hover:underline ml-2">${merchant.website}</a>
+                                        </div>
+                                    ` : ''}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-white rounded-lg shadow-md p-6">
+                        <h2 class="text-2xl font-semibold mb-4">Products (${merchant.product_count || 0})</h2>
+                        <div id="merchant-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            ${merchant.products && merchant.products.length > 0 ? 
+                                merchant.products.map(product => `
+                                    <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition cursor-pointer" onclick="window.location.href='/product/${product.id}'">
+                                        <img src="${product.image_url || '/static/images/placeholder.svg'}" 
+                                             alt="${product.name}" 
+                                             class="w-full h-48 object-cover bg-gray-200"
+                                             onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
+                                        <div class="p-4">
+                                            <h3 class="font-semibold text-sm mb-2 line-clamp-2 hover:text-blue-600">${product.name}</h3>
+                                            <div class="text-lg font-bold text-gray-900">
+                                                $${product.price.toFixed(2)}
+                                            </div>
+                                        </div>
+                                    </div>
+                                `).join('') : 
+                                '<p class="col-span-full text-center text-gray-500 py-8">No products available.</p>'
+                            }
+                        </div>
+                    </div>
+                `;
+            })
+            .catch(error => {
+                const container = document.getElementById('merchant-container');
+                container.innerHTML = `
+                    <div class="bg-white rounded-lg shadow-md p-8 text-center">
+                        <p class="text-red-500 text-lg mb-4">${error.message || 'Merchant not found.'}</p>
+                        <a href="/products" class="text-blue-600 hover:underline">Browse all products</a>
+                    </div>
+                `;
+            });
+    }
+</script>
+{% endblock %}
+

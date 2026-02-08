@@ -46,7 +46,12 @@
 <script>
     // Load featured products
     fetch('/api/products/?per_page=8')
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Failed to load products');
+            }
+            return response.json();
+        })
         .then(data => {
             const container = document.getElementById('featured-products');
             container.innerHTML = data.products.map(product => `

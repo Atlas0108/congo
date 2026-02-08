@@ -39,7 +39,12 @@
         if (local) url += `&local=true`;
 
         fetch(url)
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Failed to load products');
+                }
+                return response.json();
+            })
             .then(data => {
                 const container = document.getElementById('products-container');
                 if (data.products.length === 0) {
@@ -128,6 +133,13 @@
                     pagination.innerHTML = paginationHTML;
                 } else {
                     pagination.innerHTML = '';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading products:', error);
+                const container = document.getElementById('products-container');
+                if (container) {
+                    container.innerHTML = '<p class="col-span-full text-center text-red-500 py-8">Error loading products. Please refresh the page.</p>';
                 }
             });
     }

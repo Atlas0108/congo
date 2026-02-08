@@ -88,6 +88,17 @@
                                 </span>
                             </div>
                             
+                            <!-- Merchant Link -->
+                            <div class="mb-3">
+                                ${product.merchant_id ? `
+                                    <a href="/merchant?id=${product.merchant_id}" class="text-blue-600 hover:underline text-sm" id="merchant-link-${product.id}">
+                                        Sold by: <span id="merchant-name-${product.id}">Loading...</span>
+                                    </a>
+                                ` : `
+                                    <span class="text-gray-600 text-sm">Sold by: Congo</span>
+                                `}
+                            </div>
+                            
                             <!-- Shipping Info -->
                             ${product.shipping_time ? `
                                 <div class="mb-3">
@@ -151,7 +162,13 @@
                                 </div>
                                 <div class="mb-2">
                                     <span class="font-semibold">Sold by: </span>
-                                    <span class="text-gray-700">Congo</span>
+                                    ${product.merchant_id ? `
+                                        <a href="/merchant?id=${product.merchant_id}" class="text-blue-600 hover:underline" id="merchant-link-details-${product.id}">
+                                            <span id="merchant-name-details-${product.id}">Loading...</span>
+                                        </a>
+                                    ` : `
+                                        <span class="text-gray-700">Congo</span>
+                                    `}
                                 </div>
                                 ${product.shipping_cost > 0 ? `
                                     <div>
@@ -231,6 +248,38 @@
             // Update cart button states after product loads
             if (typeof updateCartButtonStates === 'function') {
                 updateCartButtonStates();
+            }
+            
+            // Load merchant name if product has merchant_id
+            if (product.merchant_id) {
+                fetch(`/api/users/merchants/${product.merchant_id}`)
+                    .then(response => response.ok ? response.json() : null)
+                    .then(merchant => {
+                        const merchantName = merchant && merchant.business_name ? merchant.business_name : 'Merchant';
+                        
+                        // Update main merchant link
+                        const merchantNameEl = document.getElementById(`merchant-name-${product.id}`);
+                        if (merchantNameEl) {
+                            merchantNameEl.textContent = merchantName;
+                        }
+                        
+                        // Update details section merchant link
+                        const merchantNameDetailsEl = document.getElementById(`merchant-name-details-${product.id}`);
+                        if (merchantNameDetailsEl) {
+                            merchantNameDetailsEl.textContent = merchantName;
+                        }
+                    })
+                    .catch(() => {
+                        // If merchant can't be loaded, show default
+                        const merchantNameEl = document.getElementById(`merchant-name-${product.id}`);
+                        if (merchantNameEl) {
+                            merchantNameEl.textContent = 'Merchant';
+                        }
+                        const merchantNameDetailsEl = document.getElementById(`merchant-name-details-${product.id}`);
+                        if (merchantNameDetailsEl) {
+                            merchantNameDetailsEl.textContent = 'Merchant';
+                        }
+                    });
             }
         })
         .catch(error => {

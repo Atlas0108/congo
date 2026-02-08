@@ -36,10 +36,13 @@ def ensure_product_images(app_context=None, force_refresh=False):
         if force_refresh:
             products = Product.query.all()
         else:
+            from sqlalchemy import or_
             products = Product.query.filter(
-                (Product.image_url == None) | 
-                (Product.image_url == '') |
-                (Product.image_url.like('%placeholder%'))
+                or_(
+                    Product.image_url.is_(None),
+                    Product.image_url == '',
+                    Product.image_url.like('%placeholder%')
+                )
             ).all()
         
         if not products:

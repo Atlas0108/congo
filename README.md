@@ -18,7 +18,35 @@ A full-stack e-commerce application built with Python (Flask), HTML/Tailwind CSS
 - **Database**: PostgreSQL
 - **Other**: Flask-CORS, python-dotenv
 
-## Setup Instructions
+## Quick Start
+
+**Easiest way to run the application:**
+
+```bash
+# Option 1: Using the Python startup script (recommended, cross-platform)
+python3 start.py
+
+# Option 2: Using the shell script (macOS/Linux)
+./start.sh
+```
+
+The startup script will automatically:
+- ✅ Create a virtual environment if it doesn't exist
+- ✅ Install all required dependencies
+- ✅ Create a `.env` file with default settings
+- ✅ Check database connection
+- ✅ Start the Flask server
+
+**That's it!** The app will be available at `http://127.0.0.1:5000`
+
+> **Note:** Make sure PostgreSQL is installed and create the database:
+> ```bash
+> createdb congo_db
+> ```
+> 
+> Update the `DATABASE_URL` in `.env` if your PostgreSQL setup differs.
+
+## Setup Instructions (Manual)
 
 ### Prerequisites
 
@@ -26,7 +54,7 @@ A full-stack e-commerce application built with Python (Flask), HTML/Tailwind CSS
 - PostgreSQL 12 or higher
 - pip (Python package manager)
 
-### Installation
+### Manual Installation
 
 1. **Clone the repository** (if applicable) or navigate to the project directory:
    ```bash

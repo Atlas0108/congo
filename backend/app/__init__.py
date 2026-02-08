@@ -9,9 +9,13 @@ load_dotenv()
 db = SQLAlchemy()
 
 def create_app():
+    base_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '../..'))
+    template_dir = os.path.join(base_dir, 'frontend', 'templates')
+    static_dir = os.path.join(base_dir, 'frontend', 'static')
+    
     app = Flask(__name__, 
-                template_folder='../../frontend/templates',
-                static_folder='../../frontend/static')
+                template_folder=template_dir,
+                static_folder=static_dir)
     
     # Configuration
     app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'dev-secret-key-change-in-production')

@@ -7,36 +7,97 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
-<body class="bg-gray-50">
+<body>
     <!-- Navigation -->
-    <nav class="bg-gray-900 text-white">
-        <div class="container mx-auto px-4 py-3">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-8">
-                    <a href="/" class="text-2xl font-bold text-yellow-400">Congo</a>
-                    <div class="hidden md:flex space-x-4">
-                        <a href="/" class="hover:text-yellow-400">Home</a>
-                        <a href="/products" class="hover:text-yellow-400">Products</a>
-                        <a href="/categories" class="hover:text-yellow-400">Categories</a>
-                    </div>
-                </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/cart" class="hover:text-yellow-400 flex items-center">
-                        <svg class="w-6 h-6 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                        </svg>
-                        <span id="cart-count">0</span>
+    <nav style="background-color: #050505;" class="text-white sticky top-0 z-50 shadow-lg w-full">
+        <div class="w-full px-4 py-3">
+            <div class="flex items-center justify-between gap-4">
+                <div class="flex items-center space-x-8 flex-shrink-0">
+                    <a href="/" class="flex items-center hover:opacity-80">
+                        <img src="{{ url_for('static', filename='images/congo2.webp') }}" alt="Congo" class="h-8">
                     </a>
+                </div>
+                <!-- Search Bar -->
+                <div class="flex-1 max-w-2xl mx-4 hidden md:block">
+                    <form id="header-search-form" onsubmit="handleHeaderSearch(event)" class="flex">
+                        <input 
+                            type="text" 
+                            id="header-search-input" 
+                            placeholder="Search products..." 
+                            class="flex-1 px-4 py-2 rounded-l-lg text-gray-900 focus:outline-none"
+                        >
+                        <button 
+                            type="submit" 
+                            style="background-color: #004FFF;" 
+                            class="px-6 py-2 rounded-r-lg text-white hover:opacity-90"
+                        >
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                            </svg>
+                        </button>
+                    </form>
+                </div>
+                <!-- Mobile Search Toggle -->
+                <button id="mobile-search-toggle" class="md:hidden text-white hover:opacity-80">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+                <div class="flex items-center space-x-4 flex-shrink-0">
                     <div id="auth-buttons">
-                        <a href="/login" class="hover:text-yellow-400">Sign In</a>
-                        <a href="/register" class="bg-yellow-400 text-gray-900 px-4 py-2 rounded hover:bg-yellow-500">Sign Up</a>
+                        <a href="/login" class="text-white hover:opacity-80">Sign In</a>
+                        <a href="/register" style="background-color: #004FFF;" class="text-white px-4 py-2 rounded hover:opacity-90">Sign Up</a>
                     </div>
-                    <div id="user-menu" class="hidden">
-                        <span id="username" class="mr-4"></span>
-                        <button onclick="logout()" class="hover:text-yellow-400">Logout</button>
+                    <!-- Account & Orders (shown when logged in) -->
+                    <div id="user-menu" class="hidden relative">
+                        <div class="flex items-center space-x-4">
+                            <!-- Account Dropdown -->
+                            <div class="relative group">
+                                <button class="text-white hover:opacity-80 flex items-center">
+                                    Account
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <div class="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                                    <div class="py-2">
+                                        <a href="/profile" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">My Profile</a>
+                                        <a href="/settings" class="block px-4 py-2 text-gray-800 hover:bg-gray-100">Settings</a>
+                                        <button onclick="logout()" class="block w-full text-left px-4 py-2 text-gray-800 hover:bg-gray-100">Logout</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Orders Link -->
+                            <a href="/orders" class="text-white hover:opacity-80">Orders</a>
+                        </div>
                     </div>
+                    <!-- Cart with Number -->
+                    <a href="/cart" class="text-white hover:opacity-80 flex items-center">
+                        <span id="cart-count" class="text-xl font-bold mr-2" style="color: #FF6600;">0</span>
+                        <span class="text-lg font-semibold">Cart</span>
+                    </a>
                 </div>
             </div>
+        </div>
+        <!-- Mobile Search Bar -->
+        <div id="mobile-search-container" class="hidden md:hidden w-full px-4 pb-3">
+            <form id="mobile-search-form" onsubmit="handleHeaderSearch(event)" class="flex">
+                <input 
+                    type="text" 
+                    id="mobile-search-input" 
+                    placeholder="Search products..." 
+                    class="flex-1 px-4 py-2 rounded-l-lg text-gray-900 focus:outline-none"
+                >
+                <button 
+                    type="submit" 
+                    style="background-color: #004FFF;" 
+                    class="px-6 py-2 rounded-r-lg text-white hover:opacity-90"
+                >
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
+                </button>
+            </form>
         </div>
     </nav>
 
@@ -46,38 +107,38 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-gray-900 text-white mt-16">
+    <footer style="background-color: #050505;" class="text-white mt-16">
         <div class="container mx-auto px-4 py-8">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
                 <div>
                     <h3 class="text-lg font-bold mb-4">Get to Know Us</h3>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-yellow-400">About Us</a></li>
-                        <li><a href="#" class="hover:text-yellow-400">Careers</a></li>
-                        <li><a href="#" class="hover:text-yellow-400">Press Releases</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">About Us</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">Careers</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">Press Releases</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="text-lg font-bold mb-4">Make Money with Us</h3>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-yellow-400">Sell products</a></li>
-                        <li><a href="#" class="hover:text-yellow-400">Become an Affiliate</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">Sell products</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">Become an Affiliate</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="text-lg font-bold mb-4">Let Us Help You</h3>
                     <ul class="space-y-2 text-sm">
-                        <li><a href="#" class="hover:text-yellow-400">Your Account</a></li>
-                        <li><a href="#" class="hover:text-yellow-400">Returns</a></li>
-                        <li><a href="#" class="hover:text-yellow-400">Help</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">Your Account</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">Returns</a></li>
+                        <li><a href="#" class="text-white hover:opacity-80">Help</a></li>
                     </ul>
                 </div>
                 <div>
                     <h3 class="text-lg font-bold mb-4">Connect with Us</h3>
                     <div class="flex space-x-4">
-                        <a href="#" class="hover:text-yellow-400">Facebook</a>
-                        <a href="#" class="hover:text-yellow-400">Twitter</a>
-                        <a href="#" class="hover:text-yellow-400">Instagram</a>
+                        <a href="#" class="text-white hover:opacity-80">Facebook</a>
+                        <a href="#" class="text-white hover:opacity-80">Twitter</a>
+                        <a href="#" class="text-white hover:opacity-80">Instagram</a>
                     </div>
                 </div>
             </div>

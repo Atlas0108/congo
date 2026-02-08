@@ -12,7 +12,6 @@ function checkAuth() {
         .then(user => {
             document.getElementById('auth-buttons').classList.add('hidden');
             document.getElementById('user-menu').classList.remove('hidden');
-            document.getElementById('username').textContent = user.username;
         })
         .catch(() => {
             document.getElementById('auth-buttons').classList.remove('hidden');
@@ -75,9 +74,60 @@ function logout() {
     });
 }
 
+// Handle header search
+function handleHeaderSearch(event) {
+    event.preventDefault();
+    const headerSearchInput = document.getElementById('header-search-input');
+    const mobileSearchInput = document.getElementById('mobile-search-input');
+    const searchInput = headerSearchInput || mobileSearchInput;
+    const searchTerm = searchInput ? searchInput.value.trim() : '';
+    
+    // Always navigate to products page with search query
+    if (searchTerm) {
+        window.location.href = `/products?search=${encodeURIComponent(searchTerm)}`;
+    } else {
+        window.location.href = '/products';
+    }
+}
+
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', () => {
     checkAuth();
     updateCartCount();
+    
+    // Set search input value from URL parameter if on products page
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    const headerSearchInput = document.getElementById('header-search-input');
+    const mobileSearchInput = document.getElementById('mobile-search-input');
+    
+    if (headerSearchInput && searchParam) {
+        headerSearchInput.value = searchParam;
+    }
+    if (mobileSearchInput && searchParam) {
+        mobileSearchInput.value = searchParam;
+    }
+    
+    // Mobile search toggle
+    const mobileSearchToggle = document.getElementById('mobile-search-toggle');
+    const mobileSearchContainer = document.getElementById('mobile-search-container');
+    if (mobileSearchToggle && mobileSearchContainer) {
+        mobileSearchToggle.addEventListener('click', () => {
+            mobileSearchContainer.classList.toggle('hidden');
+            if (!mobileSearchContainer.classList.contains('hidden')) {
+                mobileSearchInput.focus();
+            }
+        });
+    }
+    
+    // Sync mobile and desktop search inputs
+    if (headerSearchInput && mobileSearchInput) {
+        headerSearchInput.addEventListener('input', (e) => {
+            mobileSearchInput.value = e.target.value;
+        });
+        mobileSearchInput.addEventListener('input', (e) => {
+            headerSearchInput.value = e.target.value;
+        });
+    }
 });
 

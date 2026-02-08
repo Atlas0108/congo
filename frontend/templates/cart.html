@@ -15,11 +15,11 @@
     <form id="checkout-form" class="space-y-4">
         <div>
             <label for="shipping_address" class="block text-sm font-medium text-gray-700 mb-1">Shipping Address</label>
-            <textarea id="shipping_address" name="shipping_address" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400"></textarea>
+            <textarea id="shipping_address" name="shipping_address" required rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none"></textarea>
         </div>
         <div class="flex items-center justify-between">
             <span class="text-xl font-semibold">Total: $<span id="cart-total">0.00</span></span>
-            <button type="submit" class="bg-yellow-400 text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-yellow-500 transition">
+            <button type="submit" style="background-color: #0EAD69;" class="text-white px-8 py-3 rounded-lg font-semibold hover:opacity-90 transition">
                 Place Order
             </button>
         </div>
@@ -52,7 +52,7 @@
                         return `
                             <div class="bg-white rounded-lg shadow-md p-6 mb-4 flex items-center justify-between">
                                 <div class="flex items-center space-x-4">
-                                    <img src="${item.product.image_url || 'https://via.placeholder.com/100'}" alt="${item.product.name}" class="w-24 h-24 object-cover rounded">
+                                    <img src="${item.product.image_url || '/static/images/placeholder.svg'}" alt="${item.product.name}" class="w-24 h-24 object-cover rounded bg-gray-200" onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
                                     <div>
                                         <h3 class="font-semibold text-lg">${item.product.name}</h3>
                                         <p class="text-gray-600">$${item.product.price.toFixed(2)}</p>
@@ -76,7 +76,7 @@
                 }
             })
             .catch(() => {
-                document.getElementById('cart-container').innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Please <a href="/login" class="text-yellow-600">login</a> to view your cart.</p></div>';
+                document.getElementById('cart-container').innerHTML = '<div class="bg-white rounded-lg shadow-md p-6"><p class="text-center text-gray-500">Please <a href="/login" style="color: #004FFF;" class="hover:opacity-80">login</a> to view your cart.</p></div>';
             });
     }
     

@@ -1,5 +1,16 @@
 /* Custom styles for Congo */
 
+/* Custom color scheme */
+:root {
+    --dark-color: #050505;
+    --bg-primary: #F4F3EE;
+    --accent-color: #004FFF;
+}
+
+body {
+    background-color: var(--bg-primary);
+}
+
 .line-clamp-2 {
     display: -webkit-box;
     -webkit-line-clamp: 2;
@@ -28,5 +39,40 @@
 
 ::-webkit-scrollbar-thumb:hover {
     background: #555;
+}
+
+/* Custom button styles */
+.btn-primary {
+    background-color: var(--accent-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0039CC;
+}
+
+/* Focus ring color */
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: #004FFF !important;
+    box-shadow: 0 0 0 2px rgba(0, 79, 255, 0.2);
+}
+
+/* Cart icon styling */
+#cart-count {
+    font-size: 0.875rem;
+    font-weight: 700;
+    line-height: 1;
+}
+
+/* Dropdown menu styling */
+.group:hover .group-hover\:visible {
+    visibility: visible;
+}
+
+.group:hover .group-hover\:opacity-100 {
+    opacity: 1;
 }
 

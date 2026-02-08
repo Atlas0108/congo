@@ -6,10 +6,9 @@
 <div class="mb-6">
     <h1 class="text-3xl font-bold mb-4">Products</h1>
     
-    <!-- Search and Filter -->
+    <!-- Filter -->
     <div class="flex flex-col md:flex-row gap-4 mb-6">
-        <input type="text" id="search-input" placeholder="Search products..." class="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
-        <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400">
+        <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
             <option value="">All Categories</option>
         </select>
     </div>
@@ -47,16 +46,16 @@
                     container.innerHTML = data.products.map(product => `
                         <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
                             <a href="/product/${product.id}">
-                                <img src="${product.image_url || 'https://via.placeholder.com/300'}" alt="${product.name}" class="w-full h-48 object-cover">
+                                <img src="${product.image_url || '/static/images/placeholder.svg'}" alt="${product.name}" class="w-full h-48 object-cover bg-gray-200" onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
                             </a>
                             <div class="p-4">
                                 <a href="/product/${product.id}">
-                                    <h3 class="font-semibold text-lg mb-2 hover:text-yellow-500">${product.name}</h3>
+                                    <h3 class="font-semibold text-lg mb-2 hover:opacity-80" style="color: #004FFF;">${product.name}</h3>
                                 </a>
                                 <p class="text-gray-600 text-sm mb-2 line-clamp-2">${product.description || ''}</p>
                                 <div class="flex items-center justify-between">
-                                    <span class="text-2xl font-bold text-orange-500">$${product.price.toFixed(2)}</span>
-                                    <button onclick="addToCart(${product.id})" class="bg-yellow-400 text-gray-900 px-4 py-2 rounded hover:bg-yellow-500">
+                                    <span class="text-2xl font-bold text-gray-900">$${product.price.toFixed(2)}</span>
+                                    <button onclick="addToCart(${product.id})" style="background-color: #004FFF;" class="text-white px-4 py-2 rounded hover:opacity-90">
                                         Add to Cart
                                     </button>
                                 </div>
@@ -74,7 +73,7 @@
                     }
                     for (let i = 1; i <= data.pages; i++) {
                         if (i === data.page) {
-                            paginationHTML += `<button class="px-4 py-2 bg-yellow-400 text-gray-900 rounded font-semibold">${i}</button>`;
+                            paginationHTML += `<button style="background-color: #004FFF;" class="px-4 py-2 text-white rounded font-semibold">${i}</button>`;
                         } else {
                             paginationHTML += `<button onclick="loadProducts(${i}, '${category}', '${search}')" class="px-4 py-2 border rounded hover:bg-gray-100">${i}</button>`;
                         }
@@ -102,6 +101,13 @@
             });
         });
 
+    // Get search term from URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const searchParam = urlParams.get('search');
+    if (searchParam) {
+        currentSearch = searchParam;
+    }
+
     // Event listeners
     document.getElementById('category-filter').addEventListener('change', (e) => {
         currentCategory = e.target.value;
@@ -109,11 +115,47 @@
         loadProducts(currentPage, currentCategory, currentSearch);
     });
 
-    document.getElementById('search-input').addEventListener('input', (e) => {
-        currentSearch = e.target.value;
-        currentPage = 1;
-        loadProducts(currentPage, currentCategory, currentSearch);
-    });
+    // Sync header search input with current search
+    const headerSearchInput = document.getElementById('header-search-input');
+    const mobileSearchInput = document.getElementById('mobile-search-input');
+    
+    function syncSearchInputs() {
+        if (headerSearchInput) {
+            headerSearchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value;
+                currentPage = 1;
+                loadProducts(currentPage, currentCategory, currentSearch);
+                // Sync with mobile input
+                if (mobileSearchInput) {
+                    mobileSearchInput.value = e.target.value;
+                }
+            });
+            
+            // Set initial value if coming from URL
+            if (searchParam) {
+                headerSearchInput.value = searchParam;
+            }
+        }
+        
+        if (mobileSearchInput) {
+            mobileSearchInput.addEventListener('input', (e) => {
+                currentSearch = e.target.value;
+                currentPage = 1;
+                loadProducts(currentPage, currentCategory, currentSearch);
+                // Sync with header input
+                if (headerSearchInput) {
+                    headerSearchInput.value = e.target.value;
+                }
+            });
+            
+            // Set initial value if coming from URL
+            if (searchParam) {
+                mobileSearchInput.value = searchParam;
+            }
+        }
+    }
+    
+    syncSearchInputs();
 
     // Load products on page load
     loadProducts();

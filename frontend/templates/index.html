@@ -9,11 +9,21 @@
         max-width: 100% !important;
         padding: 0 !important;
     }
+    
+    /* Hide text initially, will fade in after data loads */
+    .fade-in-text {
+        opacity: 0;
+        transition: opacity 0.6s ease-in-out;
+    }
+    
+    .fade-in-text.visible {
+        opacity: 1;
+    }
 </style>
 <div style="background: linear-gradient(to bottom, #004FFF, #3B82F6, #60A5FA, #93C5FD, #DBEAFE, #F4F3EE); min-height: 100vh; width: 100%;">
     <div class="container mx-auto px-4 py-8">
         <!-- Hero Section -->
-        <div class="text-white py-12 mb-12 text-center">
+        <div class="text-white py-12 mb-12 text-center fade-in-text">
             <h1 id="hero-title" class="text-4xl md:text-5xl font-bold mb-4">Shop Local, Support Your Community</h1>
             <p class="text-xl md:text-2xl mb-6 text-blue-100">Discover amazing products from local sellers with fast, free delivery</p>
             <a href="/products?local=true" class="bg-white text-gray-900 px-8 py-3 rounded-lg font-semibold hover:bg-gray-100 transition shadow-lg hover:shadow-xl inline-flex items-center gap-1">
@@ -24,7 +34,7 @@
         </div>
 
         <!-- Featured Products -->
-        <div class="mb-12">
+        <div class="mb-12 fade-in-text">
             <h2 class="text-3xl font-bold mb-6">Featured Products</h2>
             <div id="featured-products" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Products will be loaded here -->
@@ -32,7 +42,7 @@
         </div>
 
         <!-- Categories -->
-        <div class="mb-12">
+        <div class="mb-12 fade-in-text">
             <h2 class="text-3xl font-bold mb-6">Shop by Category</h2>
             <div id="categories" class="grid grid-cols-2 md:grid-cols-4 gap-4">
                 <!-- Categories will be loaded here -->
@@ -44,6 +54,18 @@
 
 {% block scripts %}
 <script>
+    let productsLoaded = false;
+    let categoriesLoaded = false;
+    
+    function fadeInText() {
+        if (productsLoaded && categoriesLoaded) {
+            const textElements = document.querySelectorAll('.fade-in-text');
+            textElements.forEach(el => {
+                el.classList.add('visible');
+            });
+        }
+    }
+    
     // Load featured products
     fetch('/api/products/?per_page=8')
         .then(response => {
@@ -111,6 +133,13 @@
                     </div>
                 </div>
             `).join('');
+            productsLoaded = true;
+            fadeInText();
+        })
+        .catch(error => {
+            console.error('Error loading products:', error);
+            productsLoaded = true;
+            fadeInText();
         });
 
     // Load categories
@@ -123,6 +152,13 @@
                     <h3 class="font-semibold text-lg">${category}</h3>
                 </a>
             `).join('');
+            categoriesLoaded = true;
+            fadeInText();
+        })
+        .catch(error => {
+            console.error('Error loading categories:', error);
+            categoriesLoaded = true;
+            fadeInText();
         });
 
 </script>

@@ -9,23 +9,26 @@ from backend.app import create_app, db
 from backend.models.product import Product
 from backend.utils.image_search import fetch_images_for_products
 
+
 def populate_placeholders():
     app = create_app()
-    
+
     with app.app_context():
         # Recreate tables to ensure schema is up to date
         print("✓ Recreating database tables...")
         db.drop_all()
         db.create_all()
         print("✓ Database tables recreated")
-        
+
         # Check if products already exist
         existing_count = Product.query.count()
         if existing_count > 0:
-            print(f"⚠️  Found {existing_count} existing products. Adding placeholder products...")
+            print(
+                f"⚠️  Found {existing_count} existing products. Adding placeholder products..."
+            )
         else:
             print("✓ No existing products found. Adding placeholder products...")
-        
+
         # Add placeholder products
         placeholder_products = [
             Product(
@@ -38,7 +41,7 @@ def populate_placeholders():
                 rating=4.5,
                 review_count=120,
                 shipping_time="7-15 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Wireless Headphones",
@@ -50,7 +53,7 @@ def populate_placeholders():
                 rating=4.7,
                 review_count=89,
                 shipping_time="5-10 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Smart Coffee Maker",
@@ -62,7 +65,7 @@ def populate_placeholders():
                 rating=4.3,
                 review_count=45,
                 shipping_time="10-20 days",
-                shipping_cost=5.99
+                shipping_cost=5.99,
             ),
             Product(
                 name="Running Shoes",
@@ -74,7 +77,7 @@ def populate_placeholders():
                 rating=4.6,
                 review_count=156,
                 shipping_time="7-15 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Backpack",
@@ -86,7 +89,7 @@ def populate_placeholders():
                 rating=4.4,
                 review_count=78,
                 shipping_time="10-20 days",
-                shipping_cost=3.99
+                shipping_cost=3.99,
             ),
             Product(
                 name="Smart Watch",
@@ -98,7 +101,7 @@ def populate_placeholders():
                 rating=4.5,
                 review_count=203,
                 shipping_time="7-15 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Wireless Mouse",
@@ -110,7 +113,7 @@ def populate_placeholders():
                 rating=4.6,
                 review_count=234,
                 shipping_time="5-10 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Desk Lamp",
@@ -122,7 +125,7 @@ def populate_placeholders():
                 rating=4.4,
                 review_count=67,
                 shipping_time="10-20 days",
-                shipping_cost=4.99
+                shipping_cost=4.99,
             ),
             Product(
                 name="Yoga Mat",
@@ -134,7 +137,7 @@ def populate_placeholders():
                 rating=4.5,
                 review_count=145,
                 shipping_time="7-15 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Water Bottle",
@@ -146,7 +149,7 @@ def populate_placeholders():
                 rating=4.7,
                 review_count=189,
                 shipping_time="5-10 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Bluetooth Speaker",
@@ -158,7 +161,7 @@ def populate_placeholders():
                 rating=4.6,
                 review_count=178,
                 shipping_time="7-15 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Phone Case",
@@ -170,7 +173,7 @@ def populate_placeholders():
                 rating=4.3,
                 review_count=312,
                 shipping_time="5-10 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Kitchen Knife Set",
@@ -182,7 +185,7 @@ def populate_placeholders():
                 rating=4.5,
                 review_count=98,
                 shipping_time="10-20 days",
-                shipping_cost=7.99
+                shipping_cost=7.99,
             ),
             Product(
                 name="T-Shirt Pack",
@@ -194,7 +197,7 @@ def populate_placeholders():
                 rating=4.4,
                 review_count=267,
                 shipping_time="7-15 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
             Product(
                 name="Gaming Keyboard",
@@ -206,33 +209,33 @@ def populate_placeholders():
                 rating=4.6,
                 review_count=156,
                 shipping_time="7-15 days",
-                shipping_cost=0.00
+                shipping_cost=0.00,
             ),
         ]
-        
+
         # Fetch images for all products
         print("\n🖼️  Fetching product images from Google Image Search...")
         print("   (This may take a minute...)\n")
-        
+
         # Get Google API credentials from environment (optional)
-        google_api_key = os.getenv('GOOGLE_API_KEY')
-        google_search_engine_id = os.getenv('GOOGLE_SEARCH_ENGINE_ID')
-        
+        google_api_key = os.getenv("GOOGLE_API_KEY")
+        google_search_engine_id = os.getenv("GOOGLE_SEARCH_ENGINE_ID")
+
         # Fetch images
         image_urls = fetch_images_for_products(
             placeholder_products,
             api_key=google_api_key,
             search_engine_id=google_search_engine_id,
-            delay=0.3  # Small delay to avoid rate limiting
+            delay=0.3,  # Small delay to avoid rate limiting
         )
-        
+
         # Update product image URLs
         for product in placeholder_products:
             if product.name in image_urls:
                 product.image_url = image_urls[product.name]
-        
+
         print("\n✓ Images fetched successfully!\n")
-        
+
         # Add products to database
         added_count = 0
         for product in placeholder_products:
@@ -241,12 +244,12 @@ def populate_placeholders():
             if not existing:
                 db.session.add(product)
                 added_count += 1
-        
+
         db.session.commit()
         print(f"✓ Added {added_count} placeholder products with images")
         print(f"✓ Total products in database: {Product.query.count()}")
         print("\n✅ Placeholder products populated successfully!")
 
-if __name__ == '__main__':
-    populate_placeholders()
 
+if __name__ == "__main__":
+    populate_placeholders()

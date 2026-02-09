@@ -3,6 +3,12 @@
 {% block title %}Products - Congo{% endblock %}
 
 {% block content %}
+<script>
+    // Set data attribute immediately to hide title via CSS (runs before any rendering)
+    if (window.location.search.includes('local=true')) {
+        document.documentElement.setAttribute('data-local-products', 'true');
+    }
+</script>
 <style>
     /* Override main container for local products page to remove spacing */
     #local-products-page main {
@@ -10,7 +16,14 @@
         padding: 0 !important;
         margin: 0 !important;
     }
-    /* Background image at 0.3 opacity with fade overlay */
+    
+    /* Simple background image with fade-in for local products page */
+    #local-products-page #products-page-wrapper {
+        position: relative;
+        min-height: 100vh;
+    }
+    
+    /* Background image using pseudo-element so we can fade it independently */
     #local-products-page #products-page-wrapper::before {
         content: '';
         position: absolute;
@@ -22,10 +35,14 @@
         background-size: cover;
         background-position: center;
         background-repeat: no-repeat;
-        opacity: 0.3;
+        background-attachment: scroll;
+        opacity: 0;
         z-index: 0;
+        animation: fadeInBackground 1s ease-in-out forwards;
+        pointer-events: none;
     }
-    /* Gradient fade overlay */
+    
+    /* Gradient overlay using pseudo-element - fades to F4F3ED */
     #local-products-page #products-page-wrapper::after {
         content: '';
         position: absolute;
@@ -33,38 +50,156 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: linear-gradient(to bottom, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.3) 30%, rgba(255, 255, 255, 0.7) 60%, rgba(255, 255, 255, 0.95) 85%, rgba(255, 255, 255, 1) 100%);
+        background: linear-gradient(to bottom, rgba(244, 243, 237, 0) 0%, rgba(244, 243, 237, 0.3) 30%, rgba(244, 243, 237, 0.7) 60%, rgba(244, 243, 237, 0.95) 85%, rgba(244, 243, 237, 1) 100%);
         pointer-events: none;
         z-index: 1;
     }
-    #local-products-page #products-page-wrapper {
-        position: relative;
-    }
+    
+    /* Ensure content is above the background and gradient */
     #local-products-page #products-page-wrapper > * {
         position: relative;
         z-index: 2;
     }
+    
+    @keyframes fadeInBackground {
+        from {
+            opacity: 0;
+        }
+        to {
+            opacity: 0.3;
+        }
+    }
+    
+    /* After animation completes, keep opacity stable */
+    #local-products-page #products-page-wrapper.background-loaded::before {
+        animation: none;
+        opacity: 0.3;
+    }
+    
+    /* Hide title immediately if local param is in URL (via data attribute) */
+    html[data-local-products="true"] h1#page-title {
+        opacity: 0 !important;
+        transition: opacity 0.3s ease-in-out;
+    }
+    
+    /* Show title when city is loaded */
+    html[data-local-products="true"] h1#page-title.city-loaded {
+        opacity: 1 !important;
+    }
+    
+    /* Shimmer loading effect */
+    @keyframes shimmer {
+        0% {
+            background-position: -1000px 0;
+        }
+        100% {
+            background-position: 1000px 0;
+        }
+    }
+    
+    .shimmer {
+        animation: shimmer 2s infinite;
+        background: linear-gradient(to right, #f0f0f0 0%, #e0e0e0 20%, #f0f0f0 40%, #f0f0f0 100%);
+        background-size: 1000px 100%;
+    }
+    
+    .shimmer-card {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+    }
+    
+    .shimmer-image {
+        width: 100%;
+        height: 12rem;
+        background: #e0e0e0;
+    }
+    
+    .shimmer-text {
+        height: 1rem;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .shimmer-text.short {
+        width: 60%;
+    }
+    
+    .shimmer-text.medium {
+        width: 80%;
+    }
+    
+    .shimmer-text.long {
+        width: 100%;
+    }
+    
+    .shimmer-button {
+        width: 100%;
+        height: 2.5rem;
+        border-radius: 0.5rem;
+        background: #e0e0e0;
+    }
+    
+    /* Fade transitions - only affect products container, not background */
+    #products-container {
+        transition: opacity 0.3s ease-in-out;
+        position: relative;
+        z-index: 2;
+        /* Prevent affecting parent wrapper */
+        isolation: isolate;
+    }
+    
+    #products-container.fade-out {
+        opacity: 0;
+    }
+    
+    #products-container.fade-in {
+        opacity: 1;
+    }
+    
+    /* Ensure wrapper pseudo-elements are isolated from container changes */
+    #local-products-page #products-page-wrapper {
+        isolation: isolate;
+        contain: layout style;
+    }
+    
+    .product-card {
+        animation: fadeIn 0.4s ease-in-out;
+    }
+    
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
 </style>
 <div id="products-page-wrapper" class="min-h-screen">
     <div class="mb-6">
-        <h1 class="text-3xl font-bold mb-4">Products</h1>
-        
-        <!-- Filter -->
+        <h1 id="page-title" class="text-3xl font-bold mb-4">Products</h1>
+    
+    <!-- Filter -->
         <div id="category-filter-container" class="flex flex-col md:flex-row gap-4 mb-6">
-            <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
-                <option value="">All Categories</option>
-            </select>
-        </div>
+        <select id="category-filter" class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none">
+            <option value="">All Categories</option>
+        </select>
     </div>
+</div>
 
-    <!-- Products Grid -->
-    <div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <!-- Products will be loaded here -->
-    </div>
+<!-- Products Grid -->
+<div id="products-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <!-- Products will be loaded here -->
+</div>
 
-    <!-- Pagination -->
-    <div id="pagination" class="flex justify-center space-x-2">
-        <!-- Pagination will be loaded here -->
+<!-- Pagination -->
+<div id="pagination" class="flex justify-center space-x-2">
+    <!-- Pagination will be loaded here -->
     </div>
 </div>
 {% endblock %}
@@ -76,7 +211,37 @@
     let currentSearch = '';
     let currentLocal = false;
 
+    function showShimmerLoader() {
+        const container = document.getElementById('products-container');
+        container.classList.add('fade-out');
+        
+        setTimeout(() => {
+            const shimmerHTML = Array.from({length: 12}, () => `
+                <div class="shimmer-card">
+                    <div class="shimmer shimmer-image"></div>
+                    <div class="p-4">
+                        <div class="shimmer shimmer-text short mb-3"></div>
+                        <div class="shimmer shimmer-text medium mb-2"></div>
+                        <div class="shimmer shimmer-text short mb-4"></div>
+                        <div class="shimmer shimmer-text long mb-2"></div>
+                        <div class="shimmer shimmer-text long mb-4"></div>
+                        <div class="shimmer shimmer-button"></div>
+                    </div>
+                </div>
+            `).join('');
+            container.innerHTML = shimmerHTML;
+            container.classList.remove('fade-out');
+            container.classList.add('fade-in');
+        }, 150);
+    }
+
     function loadProducts(page = 1, category = '', search = '', local = false) {
+        const startTime = Date.now();
+        const minDisplayTime = 1000; // 1 second minimum
+        
+        // Show shimmer loader
+        showShimmerLoader();
+        
         let url = `/api/products/?page=${page}&per_page=12`;
         if (category) url += `&category=${encodeURIComponent(category)}`;
         if (search) url += `&search=${encodeURIComponent(search)}`;
@@ -90,12 +255,21 @@
                 return response.json();
             })
             .then(data => {
+                // Calculate elapsed time and ensure minimum display time
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+                
+                setTimeout(() => {
                 const container = document.getElementById('products-container');
+                    // Only fade out the container, not the wrapper
+                    container.classList.add('fade-out');
+                    
+                    setTimeout(() => {
                 if (data.products.length === 0) {
                     container.innerHTML = '<p class="col-span-full text-center text-gray-500 py-8">No products found.</p>';
                 } else {
                     container.innerHTML = data.products.map(product => `
-                        <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+                        <div class="product-card bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
                             <a href="/product/${product.id}">
                                 <img src="${product.image_url || '/static/images/placeholder.svg'}" alt="${product.name}" class="w-full h-48 object-cover bg-gray-200" onerror="this.onerror=null; this.src='/static/images/placeholder.svg';">
                             </a>
@@ -178,13 +352,29 @@
                 } else {
                     pagination.innerHTML = '';
                 }
+                    
+                    // Fade in the new content
+                    container.classList.remove('fade-out');
+                    container.classList.add('fade-in');
+                }, 150);
+                }, remainingTime);
             })
             .catch(error => {
                 console.error('Error loading products:', error);
+                const elapsedTime = Date.now() - startTime;
+                const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
+                
+                setTimeout(() => {
                 const container = document.getElementById('products-container');
                 if (container) {
+                        container.classList.add('fade-out');
+                        setTimeout(() => {
                     container.innerHTML = '<p class="col-span-full text-center text-red-500 py-8">Error loading products. Please refresh the page.</p>';
+                            container.classList.remove('fade-out');
+                            container.classList.add('fade-in');
+                        }, 150);
                 }
+                }, remainingTime);
             });
     }
 
@@ -215,39 +405,45 @@
         
         // Add ID to body to target with CSS
         document.body.id = 'local-products-page';
+        // Ensure data attribute is set for CSS targeting
+        document.documentElement.setAttribute('data-local-products', 'true');
         
-        // Apply background image with fade effect
-        const wrapper = document.getElementById('products-page-wrapper');
-        if (wrapper) {
-            // Background image and fade are handled by CSS pseudo-elements
-            wrapper.style.position = 'relative';
-            wrapper.style.backgroundSize = 'cover';
-            wrapper.style.backgroundPosition = 'center';
-            wrapper.style.backgroundRepeat = 'no-repeat';
-            wrapper.style.minHeight = '100vh';
-            wrapper.style.width = '100%';
-            wrapper.style.margin = '0';
-            wrapper.style.padding = '0';
-            
-            // Add padding to content elements for readability
-            const titleDiv = wrapper.querySelector('.mb-6');
-            if (titleDiv) {
-                titleDiv.style.padding = '2rem 2rem 1rem';
-            }
-            const productsContainer = document.getElementById('products-container');
-            if (productsContainer) {
-                productsContainer.style.padding = '0 2rem';
-            }
-            const pagination = document.getElementById('pagination');
-            if (pagination) {
-                pagination.style.padding = '2rem';
+        // Apply background image with fade effect (only once on initial load)
+        if (!window.backgroundInitialized) {
+            const wrapper = document.getElementById('products-page-wrapper');
+            if (wrapper) {
+                // Background image is handled by CSS on the wrapper
+                wrapper.style.width = '100%';
+                wrapper.style.margin = '0';
+                wrapper.style.padding = '0';
+                
+                // Add padding to content elements for readability
+                const titleDiv = wrapper.querySelector('.mb-6');
+                if (titleDiv) {
+                    titleDiv.style.padding = '2rem 2rem 1rem';
+                }
+                const productsContainer = document.getElementById('products-container');
+                if (productsContainer) {
+                    productsContainer.style.padding = '0 2rem';
+                }
+                const pagination = document.getElementById('pagination');
+                if (pagination) {
+                    pagination.style.padding = '2rem';
+                }
+                
+                // Mark background as loaded after animation completes to prevent retriggering
+                setTimeout(() => {
+                    wrapper.classList.add('background-loaded');
+                }, 1000);
+                
+                window.backgroundInitialized = true;
             }
         }
         
         // Get city from delivery location or saved addresses
         function updateLocalProductsTitle() {
             const cityZip = document.getElementById('delivery-city-zip');
-            let city = 'Your City';
+            let city = null;
             
             if (cityZip && cityZip.textContent) {
                 // Extract city from "City ZIP" format
@@ -266,10 +462,11 @@
                 }
             }
             
-            // Update page title
-            const titleElement = document.querySelector('h1');
-            if (titleElement) {
+            // Update title if we have a real city
+            const titleElement = document.getElementById('page-title');
+            if (titleElement && city && city.trim() && city !== 'Your City') {
                 titleElement.textContent = `Shop ${city}`;
+                titleElement.classList.add('city-loaded');
             }
         }
         
@@ -367,7 +564,7 @@
     
     syncSearchInputs();
 
-    // Load products on page load
+    // Load products on page load (shimmer will be shown by loadProducts)
     loadProducts(currentPage, currentCategory, currentSearch, currentLocal);
 </script>
 {% endblock %}

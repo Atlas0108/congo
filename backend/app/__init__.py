@@ -68,12 +68,13 @@ def create_app():
     CORS(app)
 
     # Register blueprints
-    from backend.api import products, users, orders, cart
+    from backend.api import products, users, orders, cart, test_db
 
     app.register_blueprint(products.bp)
     app.register_blueprint(users.bp)
     app.register_blueprint(orders.bp)
     app.register_blueprint(cart.bp)
+    app.register_blueprint(test_db.bp)
 
     # Register frontend routes
     from flask import render_template, jsonify

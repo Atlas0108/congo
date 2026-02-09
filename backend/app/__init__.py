@@ -26,8 +26,18 @@ def create_app():
         os.getenv("DATABASE_URL")
         or os.getenv("POSTGRES_URL")
         or os.getenv("POSTGRES_PRISMA_URL")
-        or "postgresql+psycopg://localhost/congo_db"
     )
+    
+    # In production (Vercel), require DATABASE_URL to be set
+    if not database_url:
+        if os.getenv("VERCEL") or os.getenv("FLASK_ENV") == "production":
+            raise ValueError(
+                "DATABASE_URL environment variable is required in production. "
+                "Please set it in your Vercel project settings."
+            )
+        # Only use localhost default in development
+        database_url = "postgresql+psycopg://localhost/congo_db"
+        print("⚠️  Warning: Using default localhost database. Set DATABASE_URL for production.")
 
     # Convert postgresql:// to postgresql+psycopg:// for SQLAlchemy if needed
     if database_url.startswith("postgresql://") and "psycopg" not in database_url:

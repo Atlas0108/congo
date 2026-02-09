@@ -137,7 +137,12 @@
             fadeInText();
         })
         .catch(error => {
-            console.error('Error loading products:', error);
+            console.error('Error loading featured products:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                url: '/api/products/?per_page=8'
+            });
             productsLoaded = true;
             fadeInText();
         });
@@ -157,6 +162,11 @@
         })
         .catch(error => {
             console.error('Error loading categories:', error);
+            console.error('Error details:', {
+                message: error.message,
+                stack: error.stack,
+                url: '/api/products/categories'
+            });
             categoriesLoaded = true;
             fadeInText();
         });

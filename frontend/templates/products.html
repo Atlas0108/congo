@@ -250,11 +250,16 @@
         fetch(url)
             .then(response => {
                 if (!response.ok) {
-                    throw new Error('Failed to load products');
+                    console.error('API Error:', response.status, response.statusText);
+                    return response.json().then(err => {
+                        console.error('Error details:', err);
+                        throw new Error(err.error || 'Failed to load products');
+                    });
                 }
                 return response.json();
             })
             .then(data => {
+                console.log('Products loaded:', data.products?.length || 0, 'products');
                 // Calculate elapsed time and ensure minimum display time
                 const elapsedTime = Date.now() - startTime;
                 const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
@@ -361,6 +366,11 @@
             })
             .catch(error => {
                 console.error('Error loading products:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    url: url
+                });
                 const elapsedTime = Date.now() - startTime;
                 const remainingTime = Math.max(0, minDisplayTime - elapsedTime);
                 
@@ -369,7 +379,7 @@
                 if (container) {
                         container.classList.add('fade-out');
                         setTimeout(() => {
-                    container.innerHTML = '<p class="col-span-full text-center text-red-500 py-8">Error loading products. Please refresh the page.</p>';
+                    container.innerHTML = `<p class="col-span-full text-center text-red-500 py-8">Error loading products: ${error.message}. Check console for details.</p>`;
                             container.classList.remove('fade-out');
                             container.classList.add('fade-in');
                         }, 150);
